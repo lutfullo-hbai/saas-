@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # LLM
     llm_provider: str = "claude"
     anthropic_api_key: str = ""
+    ollama_base_url: str = "http://localhost:11434"
 
     # App
     app_env: str = "development"
