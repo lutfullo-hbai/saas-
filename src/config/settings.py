@@ -23,6 +23,17 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     ollama_base_url: str = "http://localhost:11434"
 
+    # Payment — Payme
+    payme_merchant_id: str = ""
+    payme_secret_key: str = ""
+
+    # Payment — Click
+    click_merchant_id: str = ""
+    click_secret_key: str = ""
+
+    # Payment default provider
+    payment_provider: str = "payme"  # "payme" yoki "click"
+
     # App
     app_env: str = "development"
     log_level: str = "INFO"

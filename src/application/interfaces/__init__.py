@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
+from src.domain.entities.checkin import CheckIn
 from src.domain.entities.goal import Goal
 from src.domain.entities.plan import Plan
 from src.domain.entities.scheduled_task import ScheduledTask
@@ -130,16 +131,16 @@ class IScoreRepository(ABC):
         """Yangi ball hodisasi yaratish."""
 
 
-class ILLMProvider(ABC):
-    """LLM provayderi interfeysi."""
+class ICheckInRepository(ABC):
+    """Check-in repository interfeysi."""
 
     @abstractmethod
-    async def generate_plan(self, goal_description: str, user_context: dict) -> dict:
-        """Maqsad asosida reja generatsiya qilish."""
+    async def get_by_scheduled_task_id(self, scheduled_task_id: UUID) -> CheckIn | None:
+        """Scheduled task ID bo'yicha check-in topish."""
 
     @abstractmethod
-    async def analyze_progress(self, progress_data: dict) -> str:
-        """Progressni tahlil qilish va insight generatsiya qilish."""
+    async def create(self, checkin: CheckIn) -> CheckIn:
+        """Yangi check-in yaratish."""
 
 
 class INotifier(ABC):

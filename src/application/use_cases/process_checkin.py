@@ -3,15 +3,16 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from src.application.interfaces import IScheduledTaskRepository, IScoreRepository
+from src.application.interfaces import (
+    ICheckInRepository,
+    IScoreRepository,
+    IScheduledTaskRepository,
+    ITaskTemplateRepository,
+)
 from src.domain.entities.checkin import CheckIn
 from src.domain.entities.score_event import ScoreEvent
 from src.domain.exceptions import AlreadyCheckedInError
 from src.domain.value_objects.score_formula import calculate_score
-from src.infrastructure.db.models.checkin import CheckInModel
-from src.infrastructure.db.models.score_event import ScoreEventModel
 
 
 class ProcessCheckInUseCase:
@@ -21,11 +22,13 @@ class ProcessCheckInUseCase:
         self,
         task_repo: IScheduledTaskRepository,
         score_repo: IScoreRepository,
-        session: AsyncSession,
+        checkin_repo: ICheckInRepository,
+        template_repo: ITaskTemplateRepository,
     ):
         self._task_repo = task_repo
         self._score_repo = score_repo
-        self._session = session
+        self._checkin_repo = checkin_repo
+        self._template_repo = template_repo
 
     async def execute(
         self,
@@ -43,15 +46,7 @@ class ProcessCheckInUseCase:
 
         delta_minutes = (checkin_time - task.scheduled_datetime).total_seconds() / 60
 
-        from src.infrastructure.db.models.task_template import TaskTemplateModel
-        from sqlalchemy import select
-
-        result = await self._session.execute(
-            select(TaskTemplateModel).where(
-                TaskTemplateModel.id == task.task_template_id
-            )
-        )
-        template = result.scalar_one_or_none()
+        template = await self._template_repo.get_by_id(task.task_template_id)
         tolerance_minutes = template.tolerance_minutes if template else 10
         task_weight = template.task_weight if template else 1.0
 
@@ -64,17 +59,16 @@ class ProcessCheckInUseCase:
 
         await self._task_repo.update_status(scheduled_task_id, "completed")
 
-        checkin_model = CheckInModel(
+        checkin = CheckIn(
             scheduled_task_id=scheduled_task_id,
             checkin_time=checkin_time,
             method=method,
             user_note=user_note,
         )
-        self._session.add(checkin_model)
-        await self._session.flush()
+        await self._checkin_repo.create(checkin)
 
-        score_model = ScoreEventModel(
-            checkin_id=checkin_model.id,
+        score_event = ScoreEvent(
+            checkin_id=checkin.id,
             raw_delta_minutes=delta_minutes,
             computed_score=score,
             formula_version="v1",
@@ -83,21 +77,6 @@ class ProcessCheckInUseCase:
                 "task_weight": task_weight,
             },
         )
-        self._session.add(score_model)
-        await self._session.flush()
+        await self._score_repo.create(score_event)
 
-        return (
-            CheckIn(
-                id=checkin_model.id,
-                scheduled_task_id=scheduled_task_id,
-                checkin_time=checkin_time,
-                method=method,
-                user_note=user_note,
-            ),
-            ScoreEvent(
-                id=score_model.id,
-                checkin_id=checkin_model.id,
-                raw_delta_minutes=delta_minutes,
-                computed_score=score,
-            ),
-        )
+        return checkin, score_event

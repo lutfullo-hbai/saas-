@@ -1,6 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Goals from './pages/Goals'
+import Plans from './pages/Plans'
+import TaskTemplates from './pages/TaskTemplates'
+import CheckIn from './pages/CheckIn'
+import Progress from './pages/Progress'
+import Settings from './pages/Settings'
 import Login from './pages/Login'
 import { useAuth } from './hooks/useAuth'
 
@@ -22,6 +27,11 @@ function App() {
           <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" />} />
           <Route path="/" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/goals" element={isAuthenticated ? <Goals /> : <Navigate to="/login" />} />
+          <Route path="/goals/:goalId/plans" element={isAuthenticated ? <Plans /> : <Navigate to="/login" />} />
+          <Route path="/goals/:goalId/plans/:planId/templates" element={isAuthenticated ? <TaskTemplates /> : <Navigate to="/login" />} />
+          <Route path="/checkin" element={isAuthenticated ? <CheckIn /> : <Navigate to="/login" />} />
+          <Route path="/progress" element={isAuthenticated ? <Progress /> : <Navigate to="/login" />} />
+          <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
         </Routes>
       </div>
     </Router>

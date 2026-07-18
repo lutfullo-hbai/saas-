@@ -4,6 +4,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
+from src.config.settings import settings
+from src.infrastructure.api.middleware import RateLimitMiddleware
 from src.presentation.api.v1.admin import router as admin_router
 from src.presentation.api.v1.auth import router as auth_router
 from src.presentation.api.v1.checkins import router as checkins_router
@@ -28,6 +30,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.add_middleware(
+    RateLimitMiddleware,
+    redis_url=settings.redis_url,
+    requests_per_minute=60,
 )
 
 Instrumentator().instrument(app).expose(app)

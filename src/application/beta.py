@@ -1,9 +1,12 @@
-"""Beta test group management."""
+"""Beta test group management — DB bilan ishlaydi."""
 
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
+
+from sqlalchemy import func, select
 
 logger = logging.getLogger(__name__)
 
@@ -19,73 +22,127 @@ class BetaStatus(Enum):
 @dataclass
 class BetaParticipant:
     """Beta ishtirokchisi."""
-    user_id: int
+    user_id: UUID
     username: str
     joined_at: datetime
     status: BetaStatus = BetaStatus.ACTIVE
-    feedback_count: int = 0
-    last_active: datetime | None = None
+    notes: str | None = None
 
 
 class BetaGroupManager:
-    """Beta guruhini boshqarish."""
+    """Beta guruhini boshqarish — DB bilan."""
 
     MAX_PARTICIPANTS = 20
 
-    def __init__(self):
-        self.participants: dict[int, BetaParticipant] = {}
+    def __init__(self, session=None):
+        self._session = session
 
-    def add_participant(self, user_id: int, username: str) -> bool:
+    async def add_participant(self, user_id: UUID, username: str, notes: str | None = None) -> bool:
         """Ishtirokchi qo'shish."""
-        if len(self.participants) >= self.MAX_PARTICIPANTS:
+        if not self._session:
+            logger.warning("No DB session provided")
+            return False
+
+        from src.infrastructure.db.models.beta_participant import BetaParticipantModel
+
+        count_result = await self._session.execute(
+            select(func.count()).select_from(BetaParticipantModel)
+        )
+        current_count = count_result.scalar() or 0
+
+        if current_count >= self.MAX_PARTICIPANTS:
             logger.warning("Beta group is full")
             return False
 
-        if user_id in self.participants:
+        existing = await self._session.execute(
+            select(BetaParticipantModel).where(BetaParticipantModel.user_id == user_id)
+        )
+        if existing.scalar_one_or_none():
             logger.info(f"User {user_id} already in beta group")
             return False
 
-        participant = BetaParticipant(
+        participant = BetaParticipantModel(
             user_id=user_id,
-            username=username,
-            joined_at=datetime.now(),
+            status="active",
+            notes=notes,
         )
-        self.participants[user_id] = participant
+        self._session.add(participant)
+        await self._session.flush()
 
         logger.info(f"User {user_id} added to beta group")
         return True
 
-    def remove_participant(self, user_id: int) -> bool:
+    async def remove_participant(self, user_id: UUID) -> bool:
         """Ishtirokchini o'chirish."""
-        if user_id not in self.participants:
+        if not self._session:
             return False
 
-        self.participants[user_id].status = BetaStatus.DROPPED
+        from src.infrastructure.db.models.beta_participant import BetaParticipantModel
+
+        result = await self._session.execute(
+            select(BetaParticipantModel).where(BetaParticipantModel.user_id == user_id)
+        )
+        participant = result.scalar_one_or_none()
+
+        if not participant:
+            return False
+
+        participant.status = "dropped"
+        await self._session.flush()
+
         logger.info(f"User {user_id} removed from beta group")
         return True
 
-    def get_stats(self) -> dict:
+    async def get_stats(self) -> dict:
         """Beta guruh statistikasi."""
-        active = sum(
-            1 for p in self.participants.values()
-            if p.status == BetaStatus.ACTIVE
+        if not self._session:
+            return {
+                "total_participants": 0,
+                "active_participants": 0,
+                "max_capacity": self.MAX_PARTICIPANTS,
+                "spots_available": self.MAX_PARTICIPANTS,
+            }
+
+        from src.infrastructure.db.models.beta_participant import BetaParticipantModel
+
+        total_result = await self._session.execute(
+            select(func.count()).select_from(BetaParticipantModel)
         )
-        total_feedback = sum(p.feedback_count for p in self.participants.values())
+        total = total_result.scalar() or 0
+
+        active_result = await self._session.execute(
+            select(func.count()).select_from(BetaParticipantModel).where(
+                BetaParticipantModel.status == "active"
+            )
+        )
+        active = active_result.scalar() or 0
 
         return {
-            "total_participants": len(self.participants),
+            "total_participants": total,
             "active_participants": active,
-            "total_feedback": total_feedback,
             "max_capacity": self.MAX_PARTICIPANTS,
-            "spots_available": self.MAX_PARTICIPANTS - len(self.participants),
+            "spots_available": self.MAX_PARTICIPANTS - total,
         }
 
-    def get_active_participants(self) -> list[BetaParticipant]:
+    async def get_active_participants(self) -> list[BetaParticipant]:
         """Faol ishtirokchilar ro'yxati."""
+        if not self._session:
+            return []
+
+        from src.infrastructure.db.models.beta_participant import BetaParticipantModel
+
+        result = await self._session.execute(
+            select(BetaParticipantModel).where(BetaParticipantModel.status == "active")
+        )
+        participants = result.scalars().all()
+
         return [
-            p for p in self.participants.values()
-            if p.status == BetaStatus.ACTIVE
+            BetaParticipant(
+                user_id=p.user_id,
+                username="",
+                joined_at=p.joined_at,
+                status=BetaStatus(p.status),
+                notes=p.notes,
+            )
+            for p in participants
         ]
-
-
-beta_manager = BetaGroupManager()

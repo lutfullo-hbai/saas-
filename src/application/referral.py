@@ -1,9 +1,12 @@
-"""Referral and invite mechanism."""
+"""Referral and invite mechanism — DB bilan ishlaydi."""
 
 import logging
 import secrets
 from dataclasses import dataclass
 from datetime import datetime
+from uuid import UUID
+
+from sqlalchemy import func, select
 
 logger = logging.getLogger(__name__)
 
@@ -12,78 +15,118 @@ logger = logging.getLogger(__name__)
 class Referral:
     """Referral ma'lumotlari."""
     code: str
-    user_id: int
+    referrer_id: UUID
     created_at: datetime
     uses: int = 0
     max_uses: int = 10
 
 
 class ReferralService:
-    """Referral xizmati."""
+    """Referral xizmati — DB bilan."""
 
-    def __init__(self):
-        self.referrals: dict[str, Referral] = {}
-        self.user_referrals: dict[int, str] = {}
+    def __init__(self, session=None):
+        self._session = session
 
-    def generate_code(self, user_id: int) -> str:
+    async def generate_code(self, user_id: UUID) -> str:
         """Referral kodi generatsiya qilish."""
-        if user_id in self.user_referrals:
-            return self.user_referrals[user_id]
+        if not self._session:
+            return secrets.token_urlsafe(8)
+
+        from src.infrastructure.db.models.referral import ReferralModel
+
+        existing = await self._session.execute(
+            select(ReferralModel).where(ReferralModel.referrer_id == user_id)
+        )
+        existing_referral = existing.scalar_one_or_none()
+
+        if existing_referral:
+            return existing_referral.code
 
         code = secrets.token_urlsafe(8)
-        referral = Referral(
+        referral = ReferralModel(
+            referrer_id=user_id,
             code=code,
-            user_id=user_id,
-            created_at=datetime.now(),
+            status="active",
         )
-
-        self.referrals[code] = referral
-        self.user_referrals[user_id] = code
+        self._session.add(referral)
+        await self._session.flush()
 
         logger.info(f"Referral code generated for user {user_id}: {code}")
         return code
 
-    def use_code(self, code: str, new_user_id: int) -> bool:
+    async def use_code(self, code: str, new_user_id: UUID) -> bool:
         """Referral kodini ishlatish."""
-        if code not in self.referrals:
+        if not self._session:
+            return False
+
+        from src.infrastructure.db.models.referral import ReferralModel
+
+        result = await self._session.execute(
+            select(ReferralModel).where(ReferralModel.code == code)
+        )
+        referral = result.scalar_one_or_none()
+
+        if not referral:
             logger.warning(f"Invalid referral code: {code}")
             return False
 
-        referral = self.referrals[code]
-
-        if referral.uses >= referral.max_uses:
-            logger.warning(f"Referral code {code} reached max uses")
-            return False
-
-        if referral.user_id == new_user_id:
+        if referral.referrer_id == new_user_id:
             logger.warning("User cannot use their own referral code")
             return False
 
-        referral.uses += 1
+        count_result = await self._session.execute(
+            select(func.count()).select_from(ReferralModel).where(
+                ReferralModel.referrer_id == referral.referrer_id,
+                ReferralModel.referred_id.isnot(None),
+            )
+        )
+        uses_count = count_result.scalar() or 0
+
+        if uses_count >= 10:
+            logger.warning(f"Referral code {code} reached max uses")
+            return False
+
+        referral.referred_id = new_user_id
+        referral.used_at = datetime.utcnow()
+        await self._session.flush()
+
         logger.info(f"Referral code {code} used by user {new_user_id}")
         return True
 
-    def get_referral_stats(self, user_id: int) -> dict:
+    async def get_referral_stats(self, user_id: UUID) -> dict:
         """Referral statistikasini olish."""
-        code = self.user_referrals.get(user_id)
-        if not code:
+        if not self._session:
             return {"code": None, "uses": 0, "max_uses": 0}
 
-        referral = self.referrals[code]
+        from src.infrastructure.db.models.referral import ReferralModel
+
+        result = await self._session.execute(
+            select(ReferralModel).where(ReferralModel.referrer_id == user_id)
+        )
+        referral = result.scalar_one_or_none()
+
+        if not referral:
+            return {"code": None, "uses": 0, "max_uses": 0}
+
+        count_result = await self._session.execute(
+            select(func.count()).select_from(ReferralModel).where(
+                ReferralModel.referrer_id == user_id,
+                ReferralModel.referred_id.isnot(None),
+            )
+        )
+        uses_count = count_result.scalar() or 0
+
         return {
             "code": referral.code,
-            "uses": referral.uses,
-            "max_uses": referral.max_uses,
+            "uses": uses_count,
+            "max_uses": 10,
             "created_at": referral.created_at.isoformat(),
         }
 
-    def get_referral_link(self, user_id: int) -> str | None:
+    async def get_referral_link(self, user_id: UUID) -> str | None:
         """Referral havolasini olish."""
-        code = self.user_referrals.get(user_id)
+        code = await self.generate_code(user_id)
         if not code:
             return None
 
         return f"https://t.me/disipl_bot?start={code}"
-
-
-referral_service = ReferralService()

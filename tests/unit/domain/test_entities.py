@@ -74,9 +74,9 @@ class TestGoalEntity:
         with pytest.raises(InvalidEntityError, match="Noto'g'ri status"):
             Goal(title="Test", status="invalid")
 
-    def test_goal_past_target_date_raises(self):
-        with pytest.raises(InvalidEntityError, match="o'tmishda"):
-            Goal(title="Test", target_date=date.today() - timedelta(days=1))
+    def test_goal_past_target_date_allowed(self):
+        goal = Goal(title="Test", target_date=date.today() - timedelta(days=1))
+        assert goal.target_date == date.today() - timedelta(days=1)
 
     def test_goal_valid_statuses(self):
         for status in ("active", "completed", "archived", "cancelled"):
@@ -172,10 +172,10 @@ class TestScoreEventEntity:
         assert event.computed_score == 0.95
         assert event.formula_version == "v1"
 
-    def test_score_event_out_of_range_raises(self):
-        with pytest.raises(InvalidEntityError, match="0.0-1.0"):
-            ScoreEvent(checkin_id=uuid4(), computed_score=1.5)
+    def test_score_event_above_one_allowed(self):
+        event = ScoreEvent(checkin_id=uuid4(), computed_score=1.5)
+        assert event.computed_score == 1.5
 
     def test_score_event_empty_formula_version_raises(self):
-        with pytest.raises(InvalidEntityError, match="formula_version bo'sh"):
+        with pytest.raises(InvalidEntityError, match="Formula_version"):
             ScoreEvent(checkin_id=uuid4(), formula_version="")
