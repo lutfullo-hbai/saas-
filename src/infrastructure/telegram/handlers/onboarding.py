@@ -46,7 +46,7 @@ def _get_goal_keyboard() -> InlineKeyboardBuilder:
     builder = InlineKeyboardBuilder()
     builder.button(text="📚 Ta'lim", callback_data="onb_goal_education")
     builder.button(text="🏃 Sog'lomlik", callback_data="onb_goal_health")
-    builder.button(text("💼 Kasbiy", callback_data="onb_goal_career")
+    builder.button(text="💼 Kasbiy", callback_data="onb_goal_career")
     builder.button(text="🎨 Ijodiy", callback_data="onb_goal_creative")
     builder.button(text="💰 Moliyaviy", callback_data="onb_goal_financial")
     builder.button(text="➡️ O'tkazib yuborish", callback_data="onb_skip")
