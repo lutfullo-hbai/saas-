@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     # Payment default provider
     payment_provider: str = "payme"  # "payme" yoki "click"
 
+    # Encryption
+    encryption_key: str = ""
+
     # App
     app_env: str = "development"
     log_level: str = "INFO"
