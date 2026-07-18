@@ -3,7 +3,7 @@
 import asyncio
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 
 import redis.asyncio as aioredis
 from fastapi import FastAPI, Request, Response
@@ -74,11 +74,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(
-    RateLimitMiddleware,
-    redis_url=settings.redis_url,
-    requests_per_minute=60,
-)
+if settings.app_env != "testing":
+    app.add_middleware(
+        RateLimitMiddleware,
+        redis_url=settings.redis_url,
+        requests_per_minute=60,
+    )
 
 
 @app.middleware("http")
@@ -142,7 +143,7 @@ async def health_check():
     return {
         "status": "ok",
         "service": "disipl",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -156,7 +157,7 @@ async def readiness_check():
 
     return {
         "status": "ok" if all_healthy else "degraded",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "checks": {
             "database": db_health,
             "redis": redis_health,

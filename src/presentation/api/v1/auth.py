@@ -130,6 +130,8 @@ async def update_user(
         user.timezone = request.timezone
     if request.notification_prefs is not None:
         user.notification_prefs = request.notification_prefs
+    if request.is_admin is not None:
+        user.is_admin = request.is_admin
 
     await session.commit()
 

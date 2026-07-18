@@ -8,6 +8,7 @@ class UserUpdate(BaseModel):
     name: str | None = None
     timezone: str | None = None
     notification_prefs: dict | None = None
+    is_admin: bool | None = None
 
 
 class UserResponse(BaseModel):

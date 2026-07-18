@@ -46,7 +46,7 @@ async def _check_goal_limit(
     )
     current_goals = result.scalar() or 0
 
-    limits = UserLimits(user_id=int(user_id.integers()[0]) if hasattr(user_id, 'integers') else 0, tier=tier)
+    limits = UserLimits(user_id=hash(str(user_id)) % 1000000, tier=tier)
     if not limits.can_create_goal(current_goals):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
