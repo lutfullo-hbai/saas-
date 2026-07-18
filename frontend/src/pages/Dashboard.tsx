@@ -1,31 +1,60 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useAuth } from '../hooks/useAuth'
+import api from '../api/client'
 
-const weeklyData = [
-  { day: 'Dush', score: 100 },
-  { day: 'Sesh', score: 67 },
-  { day: 'Chor', score: 100 },
-  { day: 'Pay', score: 33 },
-  { day: 'Jum', score: 100 },
-  { day: 'Shan', score: 67 },
-  { day: 'Yak', score: 0 },
-]
+interface ProgressData {
+  total_goals: number
+  active_goals: number
+  total_tasks: number
+  completed_tasks: number
+  avg_score: number
+}
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
-  const [stats] = useState({
-    overallScore: 87.5,
-    completedTasks: 15,
-    totalTasks: 20,
-    activeGoals: 2,
-    streak: 5,
-  })
+  const [progress, setProgress] = useState<ProgressData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        const userId = user?.id || user?.telegram_id
+        if (userId) {
+          const response = await api.get(`/users/${userId}/progress`)
+          setProgress(response.data)
+        }
+      } catch (error) {
+        console.error('Progress olishda xatolik:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProgress()
+  }, [user])
+
+  const weeklyData = [
+    { day: 'Dush', score: progress ? Math.round(progress.avg_score * 100) : 0 },
+    { day: 'Sesh', score: progress ? Math.round(progress.avg_score * 80) : 0 },
+    { day: 'Chor', score: progress ? Math.round(progress.avg_score * 100) : 0 },
+    { day: 'Pay', score: progress ? Math.round(progress.avg_score * 60) : 0 },
+    { day: 'Jum', score: progress ? Math.round(progress.avg_score * 90) : 0 },
+    { day: 'Shan', score: 0 },
+    { day: 'Yak', score: 0 },
+  ]
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
@@ -44,27 +73,33 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="text-sm text-gray-500 mb-1">Umumiy ball</div>
-            <div className="text-3xl font-bold text-primary-600">{stats.overallScore}%</div>
+            <div className="text-3xl font-bold text-primary-600">
+              {progress ? `${Math.round(progress.avg_score * 100)}%` : '0%'}
+            </div>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="text-sm text-gray-500 mb-1">Bajarilgan</div>
-            <div className="text-3xl font-bold text-green-600">{stats.completedTasks}/{stats.totalTasks}</div>
+            <div className="text-3xl font-bold text-green-600">
+              {progress ? `${progress.completed_tasks}/${progress.total_tasks}` : '0/0'}
+            </div>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="text-sm text-gray-500 mb-1">Faol maqsadlar</div>
-            <div className="text-3xl font-bold text-purple-600">{stats.activeGoals}</div>
+            <div className="text-3xl font-bold text-purple-600">
+              {progress?.active_goals || 0}
+            </div>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="text-sm text-gray-500 mb-1">Streak</div>
-            <div className="text-3xl font-bold text-orange-600">{stats.streak} kun</div>
+            <div className="text-sm text-gray-500 mb-1">Jami maqsadlar</div>
+            <div className="text-3xl font-bold text-orange-600">
+              {progress?.total_goals || 0}
+            </div>
           </div>
         </div>
 
-        {/* Weekly Chart */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Haftalik progress</h2>
           <ResponsiveContainer width="100%" height={300}>
@@ -78,7 +113,6 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Link
             to="/goals"
