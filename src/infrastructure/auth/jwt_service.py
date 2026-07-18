@@ -1,7 +1,7 @@
 """JWT authentication service with refresh token support."""
 
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from jose import JWTError, jwt
@@ -11,7 +11,7 @@ from src.config.settings import settings
 
 def create_access_token(user_id: UUID, telegram_id: str) -> str:
     """Access token yaratish — qisqa muddatli."""
-    expire = datetime.utcnow() + timedelta(minutes=settings.jwt_expiration_minutes)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expiration_minutes)
     payload = {
         "sub": str(user_id),
         "telegram_id": telegram_id,
@@ -26,7 +26,7 @@ def create_refresh_token(user_id: UUID, telegram_id: str) -> str:
 
     Refresh token database'da saqlanishi kerak.
     """
-    expire = datetime.utcnow() + timedelta(days=settings.jwt_refresh_expiration_days)
+    expire = datetime.now(timezone.utc) + timedelta(days=settings.jwt_refresh_expiration_days)
     payload = {
         "sub": str(user_id),
         "telegram_id": telegram_id,

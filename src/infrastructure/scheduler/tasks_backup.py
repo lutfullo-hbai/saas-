@@ -4,8 +4,10 @@ Celery Beat orqali har kuni tunda ishga tushadi.
 Backup natijasi admin ga xabar beriladi.
 """
 
+import os
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from src.config.logging import get_logger
 from src.config.settings import settings
@@ -31,17 +33,22 @@ def run_daily_backup(self) -> dict:
     logger.info("daily_backup_started")
 
     try:
+        # DB URL ni to'g'ri parse qilish
+        parsed = urlparse(settings.database_url)
+        db_name = parsed.path.lstrip("/") or "disipl"
+        db_user = parsed.username or "disipl"
+
         result = subprocess.run(
             ["bash", "scripts/backup.sh"],
             capture_output=True,
             text=True,
             timeout=600,  # 10 daqiqa timeout
             env={
-                **__import__("os").environ,
+                **os.environ,
                 "DB_HOST": "db",
                 "DB_PORT": "5432",
-                "POSTGRES_DB": settings.database_url.split("/")[-1].split("?")[0],
-                "POSTGRES_USER": settings.database_url.split("://")[1].split(":")[0],
+                "POSTGRES_DB": db_name,
+                "POSTGRES_USER": db_user,
             },
         )
 
@@ -49,14 +56,14 @@ def run_daily_backup(self) -> dict:
             logger.info("daily_backup_completed", output=result.stdout)
             return {
                 "status": "success",
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "output": result.stdout,
             }
         else:
             logger.error("daily_backup_failed", error=result.stderr)
             return {
                 "status": "failed",
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "error": result.stderr,
             }
 
@@ -98,7 +105,7 @@ def verify_backup(self) -> dict:
             logger.warning("no_backups_found")
             return {
                 "status": "no_backups",
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
         # Eng so'nggi backup
@@ -128,7 +135,7 @@ def verify_backup(self) -> dict:
             "file": latest,
             "size_bytes": file_size,
             "created_at": file_time.isoformat(),
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except Exception as e:

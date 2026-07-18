@@ -1,7 +1,7 @@
 """User SQLAlchemy model."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, JSON, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -26,5 +26,5 @@ class UserModel(Base):
     timezone: Mapped[str] = mapped_column(String(50), nullable=False, default="UTC")
     notification_prefs: Mapped[dict] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=datetime.utcnow
+        nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
     )

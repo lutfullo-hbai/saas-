@@ -1,6 +1,6 @@
 """Check-in handler with inline keyboard buttons."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from uuid import UUID
 
 from aiogram import Router
@@ -162,7 +162,7 @@ async def handle_checkin_done(callback: CallbackQuery) -> None:
 
             checkin, score_event = await use_case.execute(
                 scheduled_task_id=task_uuid,
-                checkin_time=datetime.utcnow(),
+                checkin_time=datetime.now(timezone.utc).replace(tzinfo=None),
                 method="telegram",
                 user_note="",
             )

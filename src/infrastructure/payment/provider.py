@@ -5,7 +5,7 @@ import hmac
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 import httpx
@@ -523,8 +523,8 @@ class SubscriptionService:
         subscription = SubscriptionModel(
             user_id=user_id,
             tier=tier,
-            started_at=datetime.utcnow(),
-            expires_at=datetime.utcnow() + timedelta(days=self.PRO_DURATION_DAYS),
+            started_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=self.PRO_DURATION_DAYS),
             payment_method=payment_method,
             transaction_id=transaction_id,
             is_active=True,
@@ -544,7 +544,7 @@ class SubscriptionService:
         )
         sub = result.scalar_one_or_none()
 
-        if sub and sub.expires_at and sub.expires_at > datetime.utcnow():
+        if sub and sub.expires_at and sub.expires_at > datetime.now(timezone.utc):
             return Subscription(
                 user_id=user_id,
                 tier=SubscriptionTier(sub.tier),

@@ -1,7 +1,7 @@
 """Plan domain entity."""
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 from src.domain.exceptions import InvalidEntityError
@@ -18,7 +18,7 @@ class Plan:
     version: int = 1
     source: str = "manual"  # "manual" yoki "ai"
     is_active: bool = True
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
     def __post_init__(self) -> None:
         if self.version < 1:

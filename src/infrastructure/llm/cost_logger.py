@@ -2,7 +2,7 @@
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class LLMCostLogger:
     ) -> None:
         """LLM chaqiruvini log qilish."""
         entry = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "provider": provider,
             "model": model,
             "task_type": task_type,
@@ -48,7 +48,7 @@ class LLMCostLogger:
     def get_daily_costs(self, date: str | None = None) -> dict:
         """Kunlik xarajatlarni hisoblash."""
         if date is None:
-            date = datetime.utcnow().strftime("%Y-%m-%d")
+            date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
         total_cost = 0.0
         total_tokens = 0

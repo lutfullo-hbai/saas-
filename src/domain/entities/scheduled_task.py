@@ -1,7 +1,7 @@
 """ScheduledTask domain entity."""
 
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
 
 from src.domain.exceptions import InvalidEntityError
@@ -16,7 +16,7 @@ class ScheduledTask:
     id: UUID = field(default_factory=uuid4)
     task_template_id: UUID = field(default_factory=uuid4)
     scheduled_date: date = field(default_factory=date.today)
-    scheduled_datetime: datetime = field(default_factory=datetime.utcnow)
+    scheduled_datetime: datetime = field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     status: str = "pending"  # "pending", "completed", "missed"
     notification_sent_at: datetime | None = None
 
