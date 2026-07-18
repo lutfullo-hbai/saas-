@@ -1,4 +1,4 @@
-"""Authentication API endpoints."""
+"""Authentication API endpoints with refresh token support."""
 
 from uuid import UUID
 
@@ -7,7 +7,11 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.infrastructure.auth.jwt_service import create_access_token
+from src.infrastructure.auth.jwt_service import (
+    create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
+)
 from src.infrastructure.db.models.user import UserModel
 from src.presentation.api.dependencies import CurrentUser, get_current_user, get_db
 from src.presentation.schemas.user import UserUpdate
@@ -26,7 +30,14 @@ class TokenResponse(BaseModel):
     """JWT token javobi."""
 
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
+
+
+class RefreshTokenRequest(BaseModel):
+    """Refresh token so'rovi."""
+
+    refresh_token: str
 
 
 @router.post("/telegram", response_model=TokenResponse)
@@ -48,8 +59,45 @@ async def telegram_auth(
         session.add(user)
         await session.flush()
 
-    token = create_access_token(user.id, user.telegram_id)
-    return TokenResponse(access_token=token)
+    access_token = create_access_token(user.id, user.telegram_id)
+    refresh_token = create_refresh_token(user.id, user.telegram_id)
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(
+    request: RefreshTokenRequest,
+    session: AsyncSession = Depends(get_db),
+) -> TokenResponse:
+    """Refresh token orqali yangi access token olish."""
+    payload = decode_refresh_token(request.refresh_token)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Yaroqsiz refresh token",
+        )
+
+    # Foydalanuvchi mavjudligini tekshirish
+    result = await session.execute(
+        select(UserModel).where(UserModel.id == payload["user_id"])
+    )
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Foydalanuvchi topilmadi",
+        )
+
+    # Yangi tokenlar yaratish (rotate pattern)
+    access_token = create_access_token(user.id, user.telegram_id)
+    refresh_token = create_refresh_token(user.id, user.telegram_id)
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
 
 
 @router.patch("/{user_id}")
