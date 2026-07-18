@@ -35,5 +35,10 @@ celery_app.conf.update(
             "schedule": 3600.0,
             "args": (),
         },
+        "generate-weekly-insights": {
+            "task": "src.infrastructure.scheduler.tasks_insight.generate_weekly_insights",
+            "schedule": 604800.0,
+            "args": (),
+        },
     },
 )
