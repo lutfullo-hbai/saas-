@@ -11,6 +11,8 @@ from enum import Enum
 
 import httpx
 
+from src.infrastructure.db.models.subscription import SubscriptionModel
+
 logger = logging.getLogger(__name__)
 
 

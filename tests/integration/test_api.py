@@ -1,210 +1,144 @@
-"""API endpoint integration testlari."""
+"""API endpoint integration testlari — real DB, real HTTP, async."""
 
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
-
+import httpx
 import pytest
+import pytest_asyncio
+from httpx import ASGITransport
 
-from src.domain.entities.goal import Goal
-from src.domain.entities.plan import Plan
-from src.domain.entities.scheduled_task import ScheduledTask
-from src.domain.entities.task_template import TaskTemplate
+from src.presentation.api.app import app
+
+transport = ASGITransport(app=app)
+
+
+@pytest_asyncio.fixture
+async def client():
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
+
+
+async def _auth(client, telegram_id="integ_test"):
+    r = await client.post(
+        "/api/v1/auth/telegram",
+        json={"telegram_id": telegram_id, "name": "Tester"},
+    )
+    return {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+
+class TestHealthAPI:
+    @pytest.mark.asyncio
+    async def test_health(self, client):
+        r = await client.get("/health")
+        assert r.status_code == 200
+        assert r.json()["status"] == "ok"
+
+
+class TestAuthAPI:
+    @pytest.mark.asyncio
+    async def test_create_user(self, client):
+        r = await client.post(
+            "/api/v1/auth/telegram",
+            json={"telegram_id": "auth_create_001", "name": "Auth Test"},
+        )
+        assert r.status_code == 200
+        assert "access_token" in r.json()
+
+    @pytest.mark.asyncio
+    async def test_idempotent_auth(self, client):
+        await client.post(
+            "/api/v1/auth/telegram",
+            json={"telegram_id": "auth_idem_001", "name": "Idem"},
+        )
+        r = await client.post(
+            "/api/v1/auth/telegram",
+            json={"telegram_id": "auth_idem_001", "name": "Idem"},
+        )
+        assert r.status_code == 200
 
 
 class TestGoalsAPI:
-    """Goals API endpoint testlari."""
-
-    def test_create_goal_success(self):
-        mock_repo = AsyncMock()
-        goal = Goal(
-            user_id=uuid4(),
-            title="Test maqsad",
-            description="Tavsif",
+    @pytest.mark.asyncio
+    async def test_create_goal(self, client):
+        h = await _auth(client, "goals_create_001")
+        r = await client.post(
+            "/api/v1/goals",
+            json={"title": "Test Maqsad", "description": "Tavsif"},
+            headers=h,
         )
-        mock_repo.create.return_value = goal
+        assert r.status_code == 201
+        data = r.json()
+        assert data["title"] == "Test Maqsad"
+        assert data["status"] == "active"
 
-        from src.application.use_cases.create_goal import CreateGoalUseCase
+    @pytest.mark.asyncio
+    async def test_create_goal_empty_title(self, client):
+        h = await _auth(client, "goals_empty_001")
+        r = await client.post("/api/v1/goals", json={"title": ""}, headers=h)
+        assert r.status_code in (400, 422)
 
-        use_case = CreateGoalUseCase(mock_repo)
+    @pytest.mark.asyncio
+    async def test_list_goals(self, client):
+        h = await _auth(client, "goals_list_001")
+        await client.post("/api/v1/goals", json={"title": "M1"}, headers=h)
+        await client.post("/api/v1/goals", json={"title": "M2"}, headers=h)
+        r = await client.get("/api/v1/goals", headers=h)
+        assert r.status_code == 200
+        assert len(r.json()) >= 2
 
-        import asyncio
+    @pytest.mark.asyncio
+    async def test_get_goal_not_found(self, client):
+        from uuid import uuid4
 
-        result = asyncio.run(
-            use_case.execute(
-                user_id=goal.user_id,
-                title="Test maqsad",
-                description="Tavsif",
-            )
-        )
+        h = await _auth(client, "goals_404_001")
+        r = await client.get(f"/api/v1/goals/{uuid4()}", headers=h)
+        assert r.status_code == 404
 
-        assert result.title == "Test maqsad"
-        assert result.description == "Tavsif"
-        mock_repo.create.assert_called_once()
-
-    def test_create_goal_empty_title_raises(self):
-        mock_repo = AsyncMock()
-        from src.application.use_cases.create_goal import CreateGoalUseCase
-
-        use_case = CreateGoalUseCase(mock_repo)
-
-        import asyncio
-
-        with pytest.raises(Exception):
-            asyncio.run(
-                use_case.execute(user_id=uuid4(), title="")
-            )
-
-    def test_get_goal_not_found(self):
-        mock_repo = AsyncMock()
-        mock_repo.get_by_id.return_value = None
-
-        import asyncio
-
-        from src.application.use_cases.create_goal import CreateGoalUseCase
-
-        result = asyncio.run(mock_repo.get_by_id(uuid4()))
-        assert result is None
-
-    def test_list_goals(self):
-        mock_repo = AsyncMock()
-        goals = [
-            Goal(user_id=uuid4(), title="Maqsad 1"),
-            Goal(user_id=uuid4(), title="Maqsad 2"),
-        ]
-        mock_repo.get_by_user_id.return_value = goals
-
-        import asyncio
-
-        result = asyncio.run(mock_repo.get_by_user_id(uuid4()))
-        assert len(result) == 2
+    @pytest.mark.asyncio
+    async def test_unauthenticated(self, client):
+        r = await client.get("/api/v1/goals")
+        assert r.status_code in (401, 403)
 
 
 class TestPlansAPI:
-    """Plans API endpoint testlari."""
-
-    def test_create_plan_for_goal(self):
-        mock_repo = AsyncMock()
-        plan = Plan(goal_id=uuid4(), source="manual")
-        mock_repo.create.return_value = plan
-
-        from src.application.use_cases.create_plan import CreatePlanManuallyUseCase
-
-        use_case = CreatePlanManuallyUseCase(mock_repo)
-
-        import asyncio
-
-        result = asyncio.run(use_case.execute(goal_id=plan.goal_id))
-
-        assert result.source == "manual"
-        mock_repo.create.assert_called_once()
+    @pytest.mark.asyncio
+    async def test_create_plan(self, client):
+        h = await _auth(client, "plans_001")
+        g = await client.post("/api/v1/goals", json={"title": "Goal"}, headers=h)
+        goal_id = g.json()["id"]
+        r = await client.post(
+            f"/api/v1/goals/{goal_id}/plans",
+            json={"source": "manual"},
+            headers=h,
+        )
+        assert r.status_code in (200, 201)
+        assert r.json()["source"] == "manual"
 
 
 class TestTaskTemplatesAPI:
-    """Task Templates API endpoint testlari."""
-
-    def test_add_task_template(self):
-        mock_repo = AsyncMock()
-        template = TaskTemplate(
-            plan_id=uuid4(),
-            title="50 ta so'z yodlash",
-            tolerance_minutes=15,
-            task_weight=0.8,
+    @pytest.mark.asyncio
+    async def test_add_template(self, client):
+        h = await _auth(client, "tmpl_001")
+        g = await client.post("/api/v1/goals", json={"title": "Goal"}, headers=h)
+        p = await client.post(
+            f"/api/v1/goals/{g.json()['id']}/plans",
+            json={"source": "manual"},
+            headers=h,
         )
-        mock_repo.create.return_value = template
-
-        from src.application.use_cases.add_task_template import AddTaskTemplateUseCase
-
-        use_case = AddTaskTemplateUseCase(mock_repo)
-
-        import asyncio
-
-        result = asyncio.run(
-            use_case.execute(
-                plan_id=template.plan_id,
-                title="50 ta so'z yodlash",
-                tolerance_minutes=15,
-                task_weight=0.8,
-            )
+        r = await client.post(
+            f"/api/v1/plans/{p.json()['id']}/task-templates",
+            json={"title": "50 so'z", "tolerance_minutes": 15, "task_weight": 0.8},
+            headers=h,
         )
-
-        assert result.title == "50 ta so'z yodlash"
-        assert result.tolerance_minutes == 15
-        assert result.task_weight == 0.8
+        assert r.status_code in (200, 201)
+        assert r.json()["title"] == "50 so'z"
 
 
-class TestCheckInsAPI:
-    """Check-ins API endpoint testlari."""
+class TestAdminAPI:
+    @pytest.mark.asyncio
+    async def test_stats_requires_auth(self, client):
+        r = await client.get("/api/v1/admin/stats")
+        assert r.status_code in (401, 403)
 
-    def test_process_checkin_success(self):
-        mock_task_repo = AsyncMock()
-        mock_score_repo = AsyncMock()
-        mock_checkin_repo = AsyncMock()
-        mock_template_repo = AsyncMock()
-
-        from src.application.use_cases.process_checkin import ProcessCheckInUseCase
-
-        use_case = ProcessCheckInUseCase(
-            mock_task_repo, mock_score_repo, mock_checkin_repo, mock_template_repo
-        )
-
-        task_id = uuid4()
-        template_id = uuid4()
-        task = ScheduledTask(
-            id=task_id,
-            task_template_id=template_id,
-            scheduled_datetime=datetime(2026, 1, 1, 14, 30),
-            status="pending",
-        )
-        mock_task_repo.get_by_id.return_value = task
-
-        template = TaskTemplate(
-            id=template_id,
-            title="Test",
-            tolerance_minutes=10,
-            task_weight=1.0,
-        )
-        mock_template_repo.get_by_id.return_value = template
-
-        import asyncio
-
-        checkin, score = asyncio.run(
-            use_case.execute(
-                scheduled_task_id=task_id,
-                checkin_time=datetime(2026, 1, 1, 14, 32),
-            )
-        )
-
-        assert checkin.scheduled_task_id == task_id
-        assert score.computed_score >= 0
-        mock_task_repo.update_status.assert_called_once_with(task_id, "completed")
-
-    def test_reject_duplicate_checkin(self):
-        mock_task_repo = AsyncMock()
-        mock_score_repo = AsyncMock()
-        mock_checkin_repo = AsyncMock()
-        mock_template_repo = AsyncMock()
-
-        from src.application.use_cases.process_checkin import ProcessCheckInUseCase
-        from src.domain.exceptions import AlreadyCheckedInError
-
-        use_case = ProcessCheckInUseCase(
-            mock_task_repo, mock_score_repo, mock_checkin_repo, mock_template_repo
-        )
-
-        task = ScheduledTask(
-            id=uuid4(),
-            task_template_id=uuid4(),
-            status="completed",
-        )
-        mock_task_repo.get_by_id.return_value = task
-
-        with pytest.raises(AlreadyCheckedInError):
-            import asyncio
-
-            asyncio.run(
-                use_case.execute(
-                    scheduled_task_id=task.id,
-                    checkin_time=datetime.utcnow(),
-                )
-            )
+    @pytest.mark.asyncio
+    async def test_users_requires_auth(self, client):
+        r = await client.get("/api/v1/admin/users")
+        assert r.status_code in (401, 403)

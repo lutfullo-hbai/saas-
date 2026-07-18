@@ -1,10 +1,16 @@
 """Global test fixtures."""
 
 from collections.abc import AsyncGenerator
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from src.config.settings import settings
+from src.infrastructure.db.models.base import Base
+from src.presentation.api.app import app
+from src.presentation.api.dependencies import get_db
 
 
 @pytest.fixture
@@ -14,7 +20,6 @@ def anyio_backend():
 
 @pytest.fixture
 def mock_db_session():
-    """Mock DB session."""
     session = AsyncMock()
     session.commit = AsyncMock()
     session.rollback = AsyncMock()
