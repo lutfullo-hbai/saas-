@@ -7,6 +7,7 @@ from src.infrastructure.telegram.handlers.goals_list import router as goals_list
 from src.infrastructure.telegram.handlers.help import router as help_router
 from src.infrastructure.telegram.handlers.onboarding import router as onboarding_router
 from src.infrastructure.telegram.handlers.progress import router as progress_router
+from src.infrastructure.telegram.handlers.referral import router as referral_router
 from src.infrastructure.telegram.handlers.start import router as start_router
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "help_router",
     "onboarding_router",
     "progress_router",
+    "referral_router",
     "start_router",
 ]
