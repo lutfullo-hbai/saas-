@@ -32,7 +32,7 @@ export default function Insights() {
   useEffect(() => {
     const fetchInsights = async () => {
       try {
-        const response = await api.get('/insights', {
+        const response = await api.get('/v1/insights', {
           params: selectedType !== 'all' ? { type: selectedType } : {},
         })
         setInsights(response.data)
