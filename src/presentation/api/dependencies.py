@@ -24,6 +24,12 @@ class CurrentUser:
     telegram_id: str
 
 
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """DB session dependency — endpoint'larda ishlatiladi."""
+    async for session in get_db_session():
+        yield session
+
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> CurrentUser:
@@ -57,9 +63,3 @@ async def get_current_admin_user(
             detail="Admin huquqi talab qilinadi",
         )
     return current_user
-
-
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """DB session dependency — endpoint'larda ishlatiladi."""
-    async for session in get_db_session():
-        yield session

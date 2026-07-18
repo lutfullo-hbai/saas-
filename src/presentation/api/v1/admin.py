@@ -12,7 +12,12 @@ from src.infrastructure.db.models.plan import PlanModel
 from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
 from src.infrastructure.db.models.user import UserModel
-from src.presentation.api.dependencies import CurrentUser, get_current_admin_user, get_db
+from src.presentation.api.dependencies import (
+    CurrentUser,
+    get_current_admin_user,
+    get_current_user,
+    get_db,
+)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
