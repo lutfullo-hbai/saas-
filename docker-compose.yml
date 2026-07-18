@@ -144,6 +144,18 @@ services:
     depends_on:
       - prometheus
 
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    ports:
+      - "8888:80"
+    volumes:
+      - ./landing/index.html:/var/www/landing/index.html:ro
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
   redis_data:
