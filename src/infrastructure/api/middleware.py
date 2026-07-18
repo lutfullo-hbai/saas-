@@ -1,0 +1,124 @@
+"""Rate limiting middleware using Redis."""
+
+import time
+from collections.abc import Callable
+
+import redis.asyncio as redis
+from fastapi import Request, Response
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
+
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    """Redis-based rate limiting middleware."""
+
+    def __init__(
+        self,
+        app,
+        redis_url: str = "redis://localhost:6379/0",
+        requests_per_minute: int = 60,
+        burst_size: int = 10,
+    ):
+        super().__init__(app)
+        self.redis_url = redis_url
+        self.requests_per_minute = requests_per_minute
+        self.burst_size = burst_size
+        self.redis: redis.Redis | None = None
+
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """Request rate limitni tekshirish."""
+        if self.redis is None:
+            self.redis = redis.from_url(self.redis_url)
+
+        client_ip = request.client.host if request.client else "unknown"
+        path = request.url.path
+
+        # Health check va docs uchun rate limit yo'q
+        if path in ["/health", "/docs", "/openapi.json"]:
+            return await call_next(request)
+
+        # Rate limit key
+        key = f"rate_limit:{client_ip}:{path}"
+
+        try:
+            current = await self.redis.incr(key)
+            if current == 1:
+                await self.redis.expire(key, 60)
+
+            if current > self.requests_per_minute:
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "detail": "Too many requests",
+                        "retry_after": 60,
+                    },
+                    headers={"Retry-After": "60"},
+                )
+
+            response = await call_next(request)
+            response.headers["X-RateLimit-Limit"] = str(self.requests_per_minute)
+            response.headers["X-RateLimit-Remaining"] = str(
+                max(0, self.requests_per_minute - current)
+            )
+            return response
+
+        except Exception:
+            # Redis xato bo'lsa, rate limitni o'tkazib yuborish
+            return await call_next(request)
+
+
+class UserRateLimitMiddleware(BaseHTTPMiddleware):
+    """Foydalanuvchi darajasida rate limiting."""
+
+    def __init__(
+        self,
+        app,
+        redis_url: str = "redis://localhost:6379/0",
+        free_limit: int = 100,
+        pro_limit: int = 1000,
+    ):
+        super().__init__(app)
+        self.redis_url = redis_url
+        self.free_limit = free_limit
+        self.pro_limit = pro_limit
+        self.redis: redis.Redis | None = None
+
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """Foydalanuvchi rate limitini tekshirish."""
+        if self.redis is None:
+            self.redis = redis.from_url(self.redis_url)
+
+        # User ID olish (auth dan)
+        user_id = getattr(request.state, "user_id", None)
+        if not user_id:
+            return await call_next(request)
+
+        # User tier olish (free/pro)
+        tier = getattr(request.state, "tier", "free")
+        limit = self.pro_limit if tier == "pro" else self.free_limit
+
+        key = f"user_rate:{user_id}"
+
+        try:
+            current = await self.redis.incr(key)
+            if current == 1:
+                await self.redis.expire(key, 86400)  # Kunlik limit
+
+            if current > limit:
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "detail": "Daily limit exceeded",
+                        "limit": limit,
+                        "current": current,
+                        "tier": tier,
+                    },
+                )
+
+            response = await call_next(request)
+            response.headers["X-DailyLimit-Limit"] = str(limit)
+            response.headers["X-DailyLimit-Remaining"] = str(max(0, limit - current))
+            return response
+
+        except Exception:
+            return await call_next(request)
