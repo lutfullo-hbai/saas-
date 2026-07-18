@@ -6,6 +6,7 @@ from src.infrastructure.telegram.handlers.goal_creation import router as goal_ro
 from src.infrastructure.telegram.handlers.goals_list import router as goals_list_router
 from src.infrastructure.telegram.handlers.help import router as help_router
 from src.infrastructure.telegram.handlers.onboarding import router as onboarding_router
+from src.infrastructure.telegram.handlers.plan_approval import router as plan_approval_router
 from src.infrastructure.telegram.handlers.progress import router as progress_router
 from src.infrastructure.telegram.handlers.referral import router as referral_router
 from src.infrastructure.telegram.handlers.start import router as start_router
@@ -17,6 +18,7 @@ __all__ = [
     "goals_list_router",
     "help_router",
     "onboarding_router",
+    "plan_approval_router",
     "progress_router",
     "referral_router",
     "start_router",

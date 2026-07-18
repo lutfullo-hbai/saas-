@@ -11,6 +11,7 @@ from src.infrastructure.telegram.handlers import (
     goals_list_router,
     help_router,
     onboarding_router,
+    plan_approval_router,
     progress_router,
     referral_router,
     start_router,
@@ -31,6 +32,7 @@ async def main() -> None:
     dp.include_router(progress_router)
     dp.include_router(feedback_router)
     dp.include_router(referral_router)
+    dp.include_router(plan_approval_router)
 
     logger.info("bot_starting")
     try:
