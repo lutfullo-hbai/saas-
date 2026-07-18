@@ -5,10 +5,32 @@ from uuid import UUID
 
 from sqlalchemy import select
 
+from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
+from src.infrastructure.db.models.task_template import TaskTemplateModel
+from src.infrastructure.db.models.plan import PlanModel
+from src.infrastructure.db.models.goal import GoalModel
 from src.infrastructure.db.models.user import UserModel
 from src.infrastructure.db.session import async_session_factory
 
 logger = logging.getLogger(__name__)
+
+
+async def get_user_telegram_id_for_task(scheduled_task_id: UUID) -> str | None:
+    """ScheduledTask orqali foydalanuvchi telegram_id ni topish.
+
+    Yo'l: ScheduledTask -> TaskTemplate -> Plan -> Goal -> User
+    """
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(UserModel.telegram_id)
+            .join(GoalModel, GoalModel.user_id == UserModel.id)
+            .join(PlanModel, PlanModel.goal_id == GoalModel.id)
+            .join(TaskTemplateModel, TaskTemplateModel.plan_id == PlanModel.id)
+            .join(ScheduledTaskModel, ScheduledTaskModel.task_template_id == TaskTemplateModel.id)
+            .where(ScheduledTaskModel.id == scheduled_task_id)
+        )
+        row = result.scalar_one_or_none()
+        return row
 
 
 async def send_task_notification(

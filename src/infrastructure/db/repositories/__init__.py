@@ -13,6 +13,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 
+from src.infrastructure.db.models.checkin import CheckInModel
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
 from src.infrastructure.db.models.score_event import ScoreEventModel
 from src.infrastructure.db.models.task_template import TaskTemplateModel
@@ -177,23 +178,35 @@ async def mark_task_missed(task_id: UUID) -> None:
             logger.info(f"Marking task {task_id} as missed")
 
 
-async def create_score_event(
+async def create_missed_score_event(
     scheduled_task_id: UUID,
-    score: float,
+    score: float = 0.0,
     event_type: str = "auto_missed",
 ) -> None:
-    """Create a score event for a missed task."""
+    """Create a checkin + score event for a missed task.
+
+    ScoreEvent requires checkin_id, so we first create a CheckIn record.
+    """
     async with async_session_factory() as session:
-        event = ScoreEventModel(
+        checkin = CheckInModel(
             scheduled_task_id=scheduled_task_id,
+            checkin_time=datetime.utcnow(),
+            method="auto_missed",
+            user_note="",
+        )
+        session.add(checkin)
+        await session.flush()
+
+        event = ScoreEventModel(
+            checkin_id=checkin.id,
             raw_delta_minutes=0,
             computed_score=score,
-            formula_version="1.0",
+            formula_version="v1",
             calculation_meta={"event_type": event_type},
         )
         session.add(event)
         await session.commit()
         logger.info(
-            f"Creating score event for task {scheduled_task_id} "
-            f"with score {score} (type: {event_type})"
+            f"Creating missed score event for task {scheduled_task_id} "
+            f"with score {score} (checkin_id={checkin.id})"
         )
