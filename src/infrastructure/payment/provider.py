@@ -3,7 +3,6 @@
 import hashlib
 import hmac
 import json
-import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -11,9 +10,10 @@ from enum import Enum
 
 import httpx
 
+from src.config.logging import get_logger
 from src.infrastructure.db.models.subscription import SubscriptionModel
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class PaymentStatus(Enum):

@@ -1,6 +1,5 @@
 """Beta test group management — DB bilan ishlaydi."""
 
-import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -8,7 +7,9 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 
-logger = logging.getLogger(__name__)
+from src.config.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class BetaStatus(Enum):

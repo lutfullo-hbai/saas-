@@ -1,8 +1,8 @@
 """Telegram bot runner."""
 
 import asyncio
-import logging
 
+from src.config.logging import get_logger, setup_logging
 from src.infrastructure.telegram.bot import bot, dp
 from src.infrastructure.telegram.handlers import (
     checkin_router,
@@ -15,12 +15,12 @@ from src.infrastructure.telegram.handlers import (
     start_router,
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 async def main() -> None:
     """Botni ishga tushirish."""
+    setup_logging()
     dp.include_router(start_router)
     dp.include_router(help_router)
     dp.include_router(onboarding_router)
@@ -30,7 +30,7 @@ async def main() -> None:
     dp.include_router(progress_router)
     dp.include_router(feedback_router)
 
-    logger.info("Bot ishga tushmoqda...")
+    logger.info("bot_starting")
     try:
         await dp.start_polling(bot)
     finally:

@@ -1,6 +1,5 @@
 """Referral and invite mechanism — DB bilan ishlaydi."""
 
-import logging
 import secrets
 from dataclasses import dataclass
 from datetime import datetime
@@ -8,7 +7,9 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 
-logger = logging.getLogger(__name__)
+from src.config.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 @dataclass

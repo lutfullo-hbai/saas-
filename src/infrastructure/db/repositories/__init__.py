@@ -7,19 +7,19 @@ from src.infrastructure.db.repositories.scheduled_task_repository import (
 from src.infrastructure.db.repositories.score_repository import PostgresScoreRepository
 from src.infrastructure.db.repositories.user_repository import PostgresUserRepository
 
-import logging
 from datetime import date, datetime
 from uuid import UUID
 
 from sqlalchemy import select
 
+from src.config.logging import get_logger
 from src.infrastructure.db.models.checkin import CheckInModel
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
 from src.infrastructure.db.models.score_event import ScoreEventModel
 from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.infrastructure.db.session import async_session_factory
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 __all__ = [
     "PostgresGoalRepository",
