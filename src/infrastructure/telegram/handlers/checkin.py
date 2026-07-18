@@ -1,13 +1,13 @@
 """Check-in handler with inline keyboard buttons."""
 
 from datetime import date, datetime
+from uuid import UUID
 
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 
 from src.application.use_cases.process_checkin import ProcessCheckInUseCase
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
@@ -34,22 +34,48 @@ async def _get_user_id(telegram_id: str) -> str | None:
 
 
 async def _get_today_tasks(user_id: str) -> list[dict]:
-    """Bugungi scheduled task'larni olish."""
+    """Bugungi scheduled task'larni faqat shu foydalanuvchiga tegishli qilib olish."""
     async with async_session_factory() as session:
         result = await session.execute(
             select(ScheduledTaskModel)
-            .join(TaskTemplateModel)
-            .options(selectinload(ScheduledTaskModel.task_template))
+            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
             .where(
                 ScheduledTaskModel.scheduled_date == date.today(),
                 ScheduledTaskModel.status == "pending",
             )
         )
-        tasks = result.scalars().all()
+        all_tasks = result.scalars().all()
 
         task_list = []
-        for task in tasks:
-            template = task.task_template
+        for task in all_tasks:
+            template_result = await session.execute(
+                select(TaskTemplateModel).where(TaskTemplateModel.id == task.task_template_id)
+            )
+            template = template_result.scalar_one_or_none()
+
+            if not template:
+                continue
+
+            from src.infrastructure.db.models.plan import PlanModel
+            from src.infrastructure.db.models.goal import GoalModel
+
+            plan_result = await session.execute(
+                select(PlanModel).where(PlanModel.id == template.plan_id)
+            )
+            plan = plan_result.scalar_one_or_none()
+            if not plan:
+                continue
+
+            goal_result = await session.execute(
+                select(GoalModel).where(
+                    GoalModel.id == plan.goal_id,
+                    GoalModel.user_id == UUID(user_id),
+                )
+            )
+            goal = goal_result.scalar_one_or_none()
+            if not goal:
+                continue
+
             task_list.append(
                 {
                     "id": str(task.id),
@@ -114,19 +140,64 @@ async def handle_checkin_done(callback: CallbackQuery) -> None:
         return
 
     try:
-        from uuid import UUID
-
         async with async_session_factory() as session:
             task_repo = PostgresScheduledTaskRepository(session)
             score_repo = PostgresScoreRepository(session)
-            use_case = ProcessCheckInUseCase(task_repo, score_repo)
+            use_case = ProcessCheckInUseCase(task_repo, score_repo, session)
+
+            task_uuid = UUID(task_id)
+            task = await task_repo.get_by_id(task_uuid)
+            if not task:
+                await callback.message.edit_text("❌ Vazifa topilmadi.")
+                await callback.answer()
+                return
+
+            from src.infrastructure.db.models.task_template import TaskTemplateModel
+            from src.infrastructure.db.models.plan import PlanModel
+            from src.infrastructure.db.models.goal import GoalModel
+
+            template_result = await session.execute(
+                select(TaskTemplateModel).where(
+                    TaskTemplateModel.id == task.task_template_id
+                )
+            )
+            template = template_result.scalar_one_or_none()
+            if not template:
+                await callback.message.edit_text("❌ Vazifa shabloni topilmadi.")
+                await callback.answer()
+                return
+
+            plan_result = await session.execute(
+                select(PlanModel).where(PlanModel.id == template.plan_id)
+            )
+            plan = plan_result.scalar_one_or_none()
+            if not plan:
+                await callback.message.edit_text("❌ Reja topilmadi.")
+                await callback.answer()
+                return
+
+            goal_result = await session.execute(
+                select(GoalModel).where(
+                    GoalModel.id == plan.goal_id,
+                    GoalModel.user_id == UUID(user_id),
+                )
+            )
+            goal = goal_result.scalar_one_or_none()
+            if not goal:
+                await callback.message.edit_text(
+                    "❌ Bu vazifa sizga tegishli emas."
+                )
+                await callback.answer()
+                return
 
             checkin, score_event = await use_case.execute(
-                scheduled_task_id=UUID(task_id),
+                scheduled_task_id=task_uuid,
                 checkin_time=datetime.utcnow(),
                 method="telegram",
                 user_note="",
             )
+
+            await session.commit()
 
         score = round(score_event.computed_score, 2) if score_event else 0.0
 

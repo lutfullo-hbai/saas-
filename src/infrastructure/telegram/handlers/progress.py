@@ -8,8 +8,11 @@ from aiogram.types import Message
 from sqlalchemy import func, select
 
 from src.infrastructure.db.models.goal import GoalModel
+from src.infrastructure.db.models.plan import PlanModel
+from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
 from src.infrastructure.db.models.score_event import ScoreEventModel
+from src.infrastructure.db.models.checkin import CheckInModel
 from src.infrastructure.db.models.user import UserModel
 from src.infrastructure.db.session import async_session_factory
 
@@ -50,7 +53,9 @@ async def cmd_progress(message: Message) -> None:
 
         tasks_result = await session.execute(
             select(ScheduledTaskModel)
-            .join(GoalModel, GoalModel.id == ScheduledTaskModel.task_template_id)
+            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
+            .join(GoalModel, GoalModel.id == PlanModel.goal_id)
             .where(GoalModel.user_id == user_id)
         )
         all_tasks = tasks_result.scalars().all()
@@ -60,18 +65,20 @@ async def cmd_progress(message: Message) -> None:
 
         score_result = await session.execute(
             select(func.avg(ScoreEventModel.computed_score))
-            .join(
-                ScheduledTaskModel,
-                ScheduledTaskModel.id == ScoreEventModel.scheduled_task_id,
-            )
-            .join(GoalModel, GoalModel.id == ScheduledTaskModel.task_template_id)
+            .join(CheckInModel, CheckInModel.id == ScoreEventModel.checkin_id)
+            .join(ScheduledTaskModel, ScheduledTaskModel.id == CheckInModel.scheduled_task_id)
+            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
+            .join(GoalModel, GoalModel.id == PlanModel.goal_id)
             .where(GoalModel.user_id == user_id)
         )
         avg_score = score_result.scalar() or 0.0
 
         weekly_result = await session.execute(
             select(ScheduledTaskModel.status, func.count())
-            .join(GoalModel, GoalModel.id == ScheduledTaskModel.task_template_id)
+            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
+            .join(GoalModel, GoalModel.id == PlanModel.goal_id)
             .where(
                 GoalModel.user_id == user_id,
                 ScheduledTaskModel.scheduled_date >= week_start,

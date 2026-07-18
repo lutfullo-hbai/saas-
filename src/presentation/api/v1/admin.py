@@ -8,6 +8,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure.db.models.goal import GoalModel
+from src.infrastructure.db.models.plan import PlanModel
+from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
 from src.infrastructure.db.models.user import UserModel
 from src.presentation.api.dependencies import CurrentUser, get_current_user, get_db
@@ -161,7 +163,9 @@ async def get_user_details(
 
     tasks_result = await session.execute(
         select(ScheduledTaskModel)
-        .join(GoalModel, GoalModel.id == ScheduledTaskModel.task_template_id)
+        .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+        .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
+        .join(GoalModel, GoalModel.id == PlanModel.goal_id)
         .where(GoalModel.user_id == user_id)
     )
     tasks = tasks_result.scalars().all()

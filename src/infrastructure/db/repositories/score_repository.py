@@ -37,12 +37,18 @@ class PostgresScoreRepository(IScoreRepository):
     async def get_by_user_id(self, user_id: UUID) -> list[ScoreEvent]:
         from src.infrastructure.db.models.checkin import CheckInModel
         from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
+        from src.infrastructure.db.models.task_template import TaskTemplateModel
+        from src.infrastructure.db.models.plan import PlanModel
+        from src.infrastructure.db.models.goal import GoalModel
 
         result = await self._session.execute(
             select(ScoreEventModel)
             .join(CheckInModel, ScoreEventModel.checkin_id == CheckInModel.id)
             .join(ScheduledTaskModel, CheckInModel.scheduled_task_id == ScheduledTaskModel.id)
-            .where(ScheduledTaskModel.task_template_id.isnot(None))
+            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
+            .join(GoalModel, GoalModel.id == PlanModel.goal_id)
+            .where(GoalModel.user_id == user_id)
         )
         return [self._to_entity(m) for m in result.scalars().all()]
 
