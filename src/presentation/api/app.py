@@ -1,17 +1,20 @@
-"""FastAPI application."""
+"""FastAPI application with graceful shutdown support."""
 
+import asyncio
 import time
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 import redis.asyncio as aioredis
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from sqlalchemy import text
 
+from src.config.logging import get_logger
 from src.config.settings import settings
 from src.infrastructure.api.middleware import RateLimitMiddleware
-from src.infrastructure.db.session import async_session_factory
+from src.infrastructure.db.session import async_session_factory, engine
 from src.presentation.api.v1.admin import router as admin_router
 from src.presentation.api.v1.auth import router as auth_router
 from src.presentation.api.v1.checkins import router as checkins_router
@@ -20,10 +23,43 @@ from src.presentation.api.v1.insights import router as insights_router
 from src.presentation.api.v1.plans import router as plans_router
 from src.presentation.api.v1.task_templates import router as task_templates_router
 
+logger = get_logger(__name__)
+
+# Graceful shutdown state
+_active_requests: int = 0
+_shutdown_event = asyncio.Event()
+GRACEFUL_TIMEOUT_SECONDS = 30
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """App lifecycle — startup va graceful shutdown."""
+    logger.info("app_started", env=settings.app_env)
+    yield
+    # Shutdown
+    logger.info("graceful_shutdown_started", active_requests=_active_requests)
+    _shutdown_event.set()
+
+    # Active request'larni tugallash uchun kutish
+    deadline = time.monotonic() + GRACEFUL_TIMEOUT_SECONDS
+    while _active_requests > 0 and time.monotonic() < deadline:
+        logger.info("waiting_for_active_requests", remaining=_active_requests)
+        await asyncio.sleep(0.5)
+
+    if _active_requests > 0:
+        logger.warning("shutdown_timeout_forced", remaining=_active_requests)
+
+    # Resurslarni tozalash
+    await engine.dispose()
+    logger.info("db_engine_disposed")
+    logger.info("graceful_shutdown_completed")
+
+
 app = FastAPI(
     title="Disipl API",
     description="AI-Powered Personal Discipline & Goal Execution System",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -43,6 +79,24 @@ app.add_middleware(
     redis_url=settings.redis_url,
     requests_per_minute=60,
 )
+
+
+@app.middleware("http")
+async def track_active_requests(request: Request, call_next):
+    """Request sonini kuzatish va shutdown paytida yangilarini rad etish."""
+    global _active_requests
+    if _shutdown_event.is_set():
+        return Response(
+            content='{"detail":"Server is shutting down"}',
+            status_code=503,
+            media_type="application/json",
+        )
+    _active_requests += 1
+    try:
+        response = await call_next(request)
+        return response
+    finally:
+        _active_requests -= 1
 
 Instrumentator().instrument(app).expose(app)
 
