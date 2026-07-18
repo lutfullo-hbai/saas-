@@ -1,12 +1,13 @@
 """Authentication API endpoints."""
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure.auth.jwt_service import create_access_token
 from src.infrastructure.db.models.user import UserModel
+from src.presentation.api.dependencies import get_db
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -28,7 +29,7 @@ class TokenResponse(BaseModel):
 @router.post("/telegram", response_model=TokenResponse)
 async def telegram_auth(
     request: TelegramAuthRequest,
-    session: AsyncSession,  # type: ignore
+    session: AsyncSession = Depends(get_db),
 ) -> TokenResponse:
     """Telegram orqali ro'yxatdan o'tish va token olish."""
     result = await session.execute(

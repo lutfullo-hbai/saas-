@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.application.use_cases.create_plan import CreatePlanManuallyUseCase
 from src.infrastructure.db.repositories.goal_repository import PostgresGoalRepository
 from src.infrastructure.db.repositories.plan_repository import PostgresPlanRepository
-from src.presentation.api.dependencies import CurrentUser, get_current_user
+from src.presentation.api.dependencies import CurrentUser, get_current_user, get_db
 from src.presentation.schemas.plan import PlanCreate, PlanResponse
 
 router = APIRouter(prefix="/goals/{goal_id}/plans", tags=["Plans"])
@@ -19,7 +19,7 @@ async def create_plan(
     goal_id: UUID,
     request: PlanCreate,
     current_user: CurrentUser = Depends(get_current_user),
-    session: AsyncSession = Depends(),  # type: ignore
+    session: AsyncSession = Depends(get_db),
 ) -> PlanResponse:
     """Maqsad uchun reja yaratish."""
     goal_repo = PostgresGoalRepository(session)
