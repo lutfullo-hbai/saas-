@@ -2,14 +2,15 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.use_cases.add_task_template import AddTaskTemplateUseCase
+from src.infrastructure.db.repositories.plan_repository import PostgresPlanRepository
 from src.infrastructure.db.repositories.task_template_repository import (
     PostgresTaskTemplateRepository,
 )
-from src.presentation.api.dependencies import CurrentUser, get_current_user
+from src.presentation.api.dependencies import CurrentUser, get_current_user, get_db
 from src.presentation.schemas.task_template import (
     TaskTemplateCreate,
     TaskTemplateResponse,
@@ -23,9 +24,28 @@ async def add_task_template(
     plan_id: UUID,
     request: TaskTemplateCreate,
     current_user: CurrentUser = Depends(get_current_user),
-    session: AsyncSession = Depends(),  # type: ignore
+    session: AsyncSession = Depends(get_db),
 ) -> TaskTemplateResponse:
     """Rejaga vazifa shabloni qo'shish."""
+    plan_repo = PostgresPlanRepository(session)
+    plan = await plan_repo.get_by_id(plan_id)
+    if plan is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Reja topilmadi",
+        )
+
+    goal_repo_inner = __import__(
+        "src.infrastructure.db.repositories.goal_repository",
+        fromlist=["PostgresGoalRepository"],
+    ).PostgresGoalRepository(session)
+    goal = await goal_repo_inner.get_by_id(plan.goal_id)
+    if goal is None or goal.user_id != current_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Ruxsat yo'q",
+        )
+
     template_repo = PostgresTaskTemplateRepository(session)
     use_case = AddTaskTemplateUseCase(template_repo)
     template = await use_case.execute(

@@ -1,6 +1,5 @@
 """Goals API endpoints."""
 
-from datetime import date
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -8,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.use_cases.create_goal import CreateGoalUseCase
 from src.infrastructure.db.repositories.goal_repository import PostgresGoalRepository
-from src.presentation.api.dependencies import CurrentUser, get_current_user
+from src.presentation.api.dependencies import CurrentUser, get_current_user, get_db
 from src.presentation.schemas.goal import GoalCreate, GoalResponse
 
 router = APIRouter(prefix="/goals", tags=["Goals"])
@@ -18,7 +17,7 @@ router = APIRouter(prefix="/goals", tags=["Goals"])
 async def create_goal(
     request: GoalCreate,
     current_user: CurrentUser = Depends(get_current_user),
-    session: AsyncSession = Depends(),  # type: ignore
+    session: AsyncSession = Depends(get_db),
 ) -> GoalResponse:
     """Yangi maqsad yaratish."""
     goal_repo = PostgresGoalRepository(session)
@@ -36,7 +35,7 @@ async def create_goal(
 async def get_goal(
     goal_id: UUID,
     current_user: CurrentUser = Depends(get_current_user),
-    session: AsyncSession = Depends(),  # type: ignore
+    session: AsyncSession = Depends(get_db),
 ) -> GoalResponse:
     """Maqsadni olish."""
     goal_repo = PostgresGoalRepository(session)
@@ -57,7 +56,7 @@ async def get_goal(
 @router.get("", response_model=list[GoalResponse])
 async def list_goals(
     current_user: CurrentUser = Depends(get_current_user),
-    session: AsyncSession = Depends(),  # type: ignore
+    session: AsyncSession = Depends(get_db),
 ) -> list[GoalResponse]:
     """Foydalanuvchining barcha maqsadlarini olish."""
     goal_repo = PostgresGoalRepository(session)
