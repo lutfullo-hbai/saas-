@@ -64,12 +64,12 @@ class TestUserLimits:
         """FREE tier uchun upgrade xabari."""
         limits = UserLimits(user_id=1, tier=SubscriptionTier.FREE)
         msg = limits.get_upgrade_message()
-        assert "PRO" in msg or "pro" in msg
+        assert "Pro" in msg
 
     def test_get_usage_stats(self):
         """Foydalanish statistikasini olish."""
         limits = UserLimits(user_id=1, tier=SubscriptionTier.FREE)
         stats = limits.get_usage_stats({"goals": 2})
         assert "goals" in stats
-        assert stats["goals"]["current"] == 2
+        assert stats["goals"]["used"] == 2
         assert stats["goals"]["limit"] == 3
