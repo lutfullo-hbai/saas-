@@ -42,5 +42,21 @@ celery_app.conf.update(
             "schedule": 604800.0,
             "args": (),
         },
+        # Alerting tasks
+        "check-notification-delivery": {
+            "task": "src.infrastructure.scheduler.tasks_alerting.check_notification_delivery",
+            "schedule": 300.0,  # Har 5 daqiqada
+            "args": (),
+        },
+        "check-service-health": {
+            "task": "src.infrastructure.scheduler.tasks_alerting.check_service_health",
+            "schedule": 300.0,  # Har 5 daqiqada
+            "args": (),
+        },
+        "check-pending-tasks-backlog": {
+            "task": "src.infrastructure.scheduler.tasks_alerting.check_pending_tasks_backlog",
+            "schedule": 600.0,  # Har 10 daqiqada
+            "args": (),
+        },
     },
 )
