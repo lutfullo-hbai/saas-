@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure.db.models.goal import GoalModel
 from src.infrastructure.db.models.plan import PlanModel
+from src.infrastructure.db.models.precision_engine_config import PrecisionEngineConfig
 from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
 from src.infrastructure.db.models.user import UserModel
@@ -25,10 +26,10 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 class PrecisionEngineParams(BaseModel):
     """Precision Engine parametrlari."""
 
-    decay_constant: float = 0.95
-    bonus_multiplier: float = 1.5
-    streak_bonus: float = 0.1
-    max_penalty: float = 0.5
+    decay_const: float = 0.05
+    early_bonus_rate: float = 0.01
+    bonus_cap: float = 0.15
+    tolerance_default: float = 10.0
 
 
 class SystemStats(BaseModel):
@@ -83,21 +84,77 @@ async def get_system_stats(
 @router.get("/precision-engine")
 async def get_precision_engine_params(
     current_user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> PrecisionEngineParams:
-    """Precision Engine parametrlarini olish."""
-    return PrecisionEngineParams()
+    """Precision Engine parametrlarini DB'dan olish."""
+    result = await session.execute(
+        select(PrecisionEngineConfig).where(PrecisionEngineConfig.is_active == True)
+    )
+    config = result.scalar_one_or_none()
+
+    if not config:
+        # Default config yaratish
+        config = PrecisionEngineConfig(
+            decay_const=0.05,
+            early_bonus_rate=0.01,
+            bonus_cap=0.15,
+            tolerance_default=10.0,
+        )
+        session.add(config)
+        await session.flush()
+
+    return PrecisionEngineParams(
+        decay_const=config.decay_const,
+        early_bonus_rate=config.early_bonus_rate,
+        bonus_cap=config.bonus_cap,
+        tolerance_default=config.tolerance_default,
+    )
 
 
 @router.put("/precision-engine")
 async def update_precision_engine_params(
     params: PrecisionEngineParams,
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_admin_user),
+    session: AsyncSession = Depends(get_db),
 ) -> dict:
-    """Precision Engine parametrlarini yangilash."""
+    """Precision Engine parametrlarini DB'ga saqlash.
+
+    Faqat admin foydalanuvchi yangilashi mumkin.
+    Har bir yangilash versiya raqamini oshiradi.
+    """
+    result = await session.execute(
+        select(PrecisionEngineConfig).where(PrecisionEngineConfig.is_active == True)
+    )
+    config = result.scalar_one_or_none()
+
+    if config:
+        # Eski config'ni noaktiv qilish
+        config.is_active = False
+
+    # Yangi versiya yaratish
+    new_version = "1"
+    if config and config.version:
+        try:
+            new_version = str(int(config.version) + 1)
+        except ValueError:
+            new_version = "1"
+
+    new_config = PrecisionEngineConfig(
+        decay_const=params.decay_const,
+        early_bonus_rate=params.early_bonus_rate,
+        bonus_cap=params.bonus_cap,
+        tolerance_default=params.tolerance_default,
+        is_active=True,
+        version=new_version,
+    )
+    session.add(new_config)
+    await session.flush()
+
     return {
         "status": "updated",
+        "version": new_version,
         "params": params.model_dump(),
-        "message": "Precision Engine params updated successfully",
+        "message": f"Precision Engine config updated to version {new_version}",
     }
 
 
