@@ -8,11 +8,15 @@ from src.infrastructure.db.repositories.score_repository import PostgresScoreRep
 from src.infrastructure.db.repositories.user_repository import PostgresUserRepository
 
 import logging
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
-from src.domain.entities.scheduled_task import ScheduledTask
-from src.domain.entities.task_template import TaskTemplate
+from sqlalchemy import select
+
+from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
+from src.infrastructure.db.models.score_event import ScoreEventModel
+from src.infrastructure.db.models.task_template import TaskTemplateModel
+from src.infrastructure.db.session import async_session_factory
 
 logger = logging.getLogger(__name__)
 
@@ -24,76 +28,172 @@ __all__ = [
 ]
 
 
-def get_active_task_templates() -> list[TaskTemplate]:
+async def get_active_task_templates() -> list[dict]:
     """Get all active task templates."""
-    logger.debug("Fetching active task templates")
-    return []
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(TaskTemplateModel).where(TaskTemplateModel.is_active == True)
+        )
+        templates = result.scalars().all()
+        return [
+            {
+                "id": t.id,
+                "title": t.title,
+                "recurrence_rule": t.recurrence_rule,
+                "scheduled_time": t.scheduled_time,
+                "tolerance_minutes": t.tolerance_minutes,
+                "task_weight": t.task_weight,
+            }
+            for t in templates
+        ]
 
 
-def get_scheduled_tasks_by_date(
+async def get_scheduled_tasks_by_date(
     task_template_id: UUID,
-    date_from: datetime,
-    date_to: datetime,
-) -> list[ScheduledTask]:
+    date_from: date,
+    date_to: date,
+) -> list[dict]:
     """Check if a scheduled task already exists for the given template and date."""
-    logger.debug(
-        f"Checking existing tasks for template {task_template_id} "
-        f"between {date_from} and {date_to}"
-    )
-    return []
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(ScheduledTaskModel).where(
+                ScheduledTaskModel.task_template_id == task_template_id,
+                ScheduledTaskModel.scheduled_date >= date_from,
+                ScheduledTaskModel.scheduled_date <= date_to,
+            )
+        )
+        tasks = result.scalars().all()
+        return [
+            {
+                "id": t.id,
+                "task_template_id": t.task_template_id,
+                "scheduled_date": t.scheduled_date,
+                "scheduled_datetime": t.scheduled_datetime,
+                "status": t.status,
+            }
+            for t in tasks
+        ]
 
 
-def create_scheduled_task(
+async def create_scheduled_task(
     task_template_id: UUID,
-    scheduled_date: datetime.date,
+    scheduled_date: date,
     scheduled_datetime: datetime,
-) -> ScheduledTask:
+) -> dict:
     """Create a new scheduled task."""
-    logger.info(
-        f"Creating scheduled task for template {task_template_id} "
-        f"at {scheduled_datetime}"
-    )
-    return ScheduledTask(
-        task_template_id=task_template_id,
-        scheduled_date=scheduled_date,
-        scheduled_datetime=scheduled_datetime,
-    )
+    async with async_session_factory() as session:
+        task = ScheduledTaskModel(
+            task_template_id=task_template_id,
+            scheduled_date=scheduled_date,
+            scheduled_datetime=scheduled_datetime,
+            status="pending",
+        )
+        session.add(task)
+        await session.commit()
+        await session.refresh(task)
+        logger.info(
+            f"Created scheduled task {task.id} for template {task_template_id} "
+            f"at {scheduled_datetime}"
+        )
+        return {
+            "id": task.id,
+            "task_template_id": task.task_template_id,
+            "scheduled_date": task.scheduled_date,
+            "scheduled_datetime": task.scheduled_datetime,
+            "status": task.status,
+        }
 
 
-def get_pending_scheduled_tasks_in_window(
+async def get_pending_scheduled_tasks_in_window(
     window_start: datetime,
     window_end: datetime,
-) -> list[ScheduledTask]:
+) -> list[dict]:
     """Get pending tasks within the notification window."""
-    logger.debug(
-        f"Fetching pending tasks between {window_start} and {window_end}"
-    )
-    return []
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(ScheduledTaskModel).where(
+                ScheduledTaskModel.status == "pending",
+                ScheduledTaskModel.scheduled_datetime >= window_start,
+                ScheduledTaskModel.scheduled_datetime <= window_end,
+            )
+        )
+        tasks = result.scalars().all()
+        return [
+            {
+                "id": t.id,
+                "task_template_id": t.task_template_id,
+                "scheduled_datetime": t.scheduled_datetime,
+                "status": t.status,
+                "notification_sent_at": t.notification_sent_at,
+            }
+            for t in tasks
+        ]
 
 
-def mark_notification_sent(task_id: UUID) -> None:
+async def mark_notification_sent(task_id: UUID) -> None:
     """Mark that a notification has been sent for a task."""
-    logger.info(f"Marking notification sent for task {task_id}")
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(ScheduledTaskModel).where(ScheduledTaskModel.id == task_id)
+        )
+        task = result.scalar_one_or_none()
+        if task:
+            task.notification_sent_at = datetime.utcnow()
+            await session.commit()
+            logger.info(f"Marking notification sent for task {task_id}")
 
 
-def get_overdue_pending_tasks(threshold: datetime) -> list[ScheduledTask]:
+async def get_overdue_pending_tasks(threshold: datetime) -> list[dict]:
     """Get pending tasks that are overdue (past threshold)."""
-    logger.debug(f"Fetching overdue tasks before {threshold}")
-    return []
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(ScheduledTaskModel).where(
+                ScheduledTaskModel.status == "pending",
+                ScheduledTaskModel.scheduled_datetime < threshold,
+            )
+        )
+        tasks = result.scalars().all()
+        return [
+            {
+                "id": t.id,
+                "task_template_id": t.task_template_id,
+                "scheduled_datetime": t.scheduled_datetime,
+                "status": t.status,
+            }
+            for t in tasks
+        ]
 
 
-def mark_task_missed(task_id: UUID) -> None:
+async def mark_task_missed(task_id: UUID) -> None:
     """Mark a task as missed."""
-    logger.info(f"Marking task {task_id} as missed")
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(ScheduledTaskModel).where(ScheduledTaskModel.id == task_id)
+        )
+        task = result.scalar_one_or_none()
+        if task:
+            task.status = "missed"
+            await session.commit()
+            logger.info(f"Marking task {task_id} as missed")
 
 
-def create_score_event(
+async def create_score_event(
     scheduled_task_id: UUID,
     score: float,
     event_type: str = "auto_missed",
 ) -> None:
     """Create a score event for a missed task."""
-    logger.info(
-        f"Creating score event for task {scheduled_task_id} "
-        f"with score {score} (type: {event_type})"
-    )
+    async with async_session_factory() as session:
+        event = ScoreEventModel(
+            scheduled_task_id=scheduled_task_id,
+            raw_delta_minutes=0,
+            computed_score=score,
+            formula_version="1.0",
+            calculation_meta={"event_type": event_type},
+        )
+        session.add(event)
+        await session.commit()
+        logger.info(
+            f"Creating score event for task {scheduled_task_id} "
+            f"with score {score} (type: {event_type})"
+        )
