@@ -1,5 +1,7 @@
 """Authentication API endpoints."""
 
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -7,7 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure.auth.jwt_service import create_access_token
 from src.infrastructure.db.models.user import UserModel
-from src.presentation.api.dependencies import get_db
+from src.presentation.api.dependencies import CurrentUser, get_current_user, get_db
+from src.presentation.schemas.user import UserUpdate
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -47,3 +50,44 @@ async def telegram_auth(
 
     token = create_access_token(user.id, user.telegram_id)
     return TokenResponse(access_token=token)
+
+
+@router.patch("/{user_id}")
+async def update_user(
+    user_id: UUID,
+    request: UserUpdate,
+    current_user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    """Foydalanuvchi ma'lumotlarini yangilash."""
+    if user_id != current_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Ruxsat yo'q",
+        )
+
+    result = await session.execute(
+        select(UserModel).where(UserModel.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Foydalanuvchi topilmadi",
+        )
+
+    if request.name is not None:
+        user.name = request.name
+    if request.timezone is not None:
+        user.timezone = request.timezone
+    if request.notification_prefs is not None:
+        user.notification_prefs = request.notification_prefs
+
+    await session.commit()
+
+    return {
+        "id": str(user.id),
+        "telegram_id": user.telegram_id,
+        "name": user.name,
+        "timezone": user.timezone,
+    }

@@ -14,6 +14,31 @@ from src.presentation.schemas.plan import PlanCreate, PlanResponse
 router = APIRouter(prefix="/goals/{goal_id}/plans", tags=["Plans"])
 
 
+@router.get("", response_model=list[PlanResponse])
+async def list_plans(
+    goal_id: UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> list[PlanResponse]:
+    """Maqsadning rejalarni olish."""
+    goal_repo = PostgresGoalRepository(session)
+    goal = await goal_repo.get_by_id(goal_id)
+    if goal is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Maqsad topilmadi",
+        )
+    if goal.user_id != current_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Ruxsat yo'q",
+        )
+
+    plan_repo = PostgresPlanRepository(session)
+    plans = await plan_repo.get_by_goal_id(goal_id)
+    return [PlanResponse.model_validate(p) for p in plans]
+
+
 @router.post("", response_model=PlanResponse, status_code=status.HTTP_201_CREATED)
 async def create_plan(
     goal_id: UUID,

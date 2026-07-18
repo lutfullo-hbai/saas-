@@ -3,6 +3,7 @@
 from src.infrastructure.db.models.base import Base
 from src.infrastructure.db.models.beta_participant import BetaParticipantModel
 from src.infrastructure.db.models.checkin import CheckInModel
+from src.infrastructure.db.models.feedback import FeedbackModel
 from src.infrastructure.db.models.goal import GoalModel
 from src.infrastructure.db.models.insight import InsightModel
 from src.infrastructure.db.models.plan import PlanModel
@@ -18,6 +19,7 @@ __all__ = [
     "Base",
     "BetaParticipantModel",
     "CheckInModel",
+    "FeedbackModel",
     "GoalModel",
     "InsightModel",
     "PlanModel",

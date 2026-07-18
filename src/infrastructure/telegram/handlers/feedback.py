@@ -5,7 +5,12 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from sqlalchemy import func, select
 
+from src.infrastructure.db.models.goal import GoalModel
+from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
+from src.infrastructure.db.models.user import UserModel
+from src.infrastructure.db.session import async_session_factory
 from src.infrastructure.telegram.states.feedback import FeedbackStates
 
 router = Router()
@@ -55,7 +60,7 @@ async def process_feedback_type(callback, state: FSMContext) -> None:
 
 @router.message(FeedbackStates.waiting_for_content)
 async def process_feedback_content(message: Message, state: FSMContext) -> None:
-    """Feedback kontentini qabul qilish."""
+    """Feedback kontentini qabul qilish va DB ga saqlash."""
     content = message.text.strip()
 
     if len(content) < 10:
@@ -68,8 +73,26 @@ async def process_feedback_content(message: Message, state: FSMContext) -> None:
 
     data = await state.get_data()
     feedback_type = data.get("feedback_type", "other")
+    telegram_id = str(message.from_user.id)
 
-    # Feedbackni saqlash (placeholder)
+    # Feedbackni DB ga saqlash
+    from src.infrastructure.db.models.feedback import FeedbackModel
+
+    async with async_session_factory() as session:
+        user_result = await session.execute(
+            select(UserModel).where(UserModel.telegram_id == telegram_id)
+        )
+        user = user_result.scalar_one_or_none()
+
+        if user:
+            feedback = FeedbackModel(
+                user_id=user.id,
+                feedback_type=feedback_type,
+                content=content,
+            )
+            session.add(feedback)
+            await session.commit()
+
     await message.answer(
         "✅ **Rahmat!** Feedbackingiz qabul qilindi.\n\n"
         "Sizning fikringiz biz uchun muhim. "
@@ -80,13 +103,34 @@ async def process_feedback_content(message: Message, state: FSMContext) -> None:
 
 @router.message(Command("stats"))
 async def cmd_stats(message: Message) -> None:
-    """Bot statistikasi (admin uchun)."""
-    # Placeholder - haqiqiy DB so'rovi
+    """Bot statistikasi — haqiqiy DB dan."""
+    async with async_session_factory() as session:
+        users_result = await session.execute(select(func.count(UserModel.id)))
+        total_users = users_result.scalar() or 0
+
+        goals_result = await session.execute(select(func.count(GoalModel.id)))
+        total_goals = goals_result.scalar() or 0
+
+        checkins_result = await session.execute(
+            select(func.count(ScheduledTaskModel.id)).where(
+                ScheduledTaskModel.status == "completed"
+            )
+        )
+        total_checkins = checkins_result.scalar() or 0
+
+        active_result = await session.execute(
+            select(func.count(func.distinct(GoalModel.user_id))).where(
+                GoalModel.status == "active"
+            )
+        )
+        active_users = active_result.scalar() or 0
+
+    activity = round((active_users / total_users * 100), 1) if total_users > 0 else 0
+
     await message.answer(
         "📊 **Bot Statistikasi**\n\n"
-        "👥 Foydalanuvchilar: 150\n"
-        "🎯 Maqsadlar: 450\n"
-        "✅ Check-inlar: 3,200\n"
-        "📈 Faollik: 85%\n\n"
-        "Beta guruh: 18/20 ishtirokchi"
+        f"👥 Foydalanuvchilar: {total_users}\n"
+        f"🎯 Maqsadlar: {total_goals}\n"
+        f"✅ Bajarilgan vazifalar: {total_checkins:,}\n"
+        f"📈 Faollik: {activity}%"
     )

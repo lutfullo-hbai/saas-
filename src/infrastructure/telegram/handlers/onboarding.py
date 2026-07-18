@@ -5,7 +5,10 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from sqlalchemy import select
 
+from src.infrastructure.db.models.user import UserModel
+from src.infrastructure.db.session import async_session_factory
 from src.infrastructure.telegram.states.onboarding import OnboardingStates
 
 router = Router()
@@ -14,6 +17,20 @@ router = Router()
 @router.message(Command("onboarding"))
 async def cmd_onboarding(message: Message, state: FSMContext) -> None:
     """Onboarding boshlash."""
+    telegram_id = str(message.from_user.id)
+
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(UserModel).where(UserModel.telegram_id == telegram_id)
+        )
+        existing = result.scalar_one_or_none()
+        if existing:
+            await message.answer(
+                f"👋 Siz allaqachon ro'yxatdan o'tgansiz, {existing.name}!\n\n"
+                "Maqsad qo'shish uchun /newgoal buyrug'ini bosing."
+            )
+            return
+
     await state.set_state(OnboardingStates.welcome)
     await message.answer(
         "👋 **Disipl'ga xush kelibsiz!**\n\n"
@@ -100,9 +117,29 @@ async def process_first_goal(message: Message, state: FSMContext) -> None:
 
 
 async def _finish_onboarding(message: Message | CallbackQuery, state: FSMContext) -> None:
-    """Onboarding yakunlash."""
+    """Onboarding yakunlash — foydalanuvchini DB ga saqlash."""
     data = await state.get_data()
     name = data.get("name", "Foydalanuvchi")
+
+    if isinstance(message, Message):
+        telegram_id = str(message.from_user.id)
+    else:
+        telegram_id = str(message.from_user.id)
+
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(UserModel).where(UserModel.telegram_id == telegram_id)
+        )
+        existing = result.scalar_one_or_none()
+
+        if not existing:
+            user = UserModel(
+                telegram_id=telegram_id,
+                name=name,
+                timezone="UTC",
+            )
+            session.add(user)
+            await session.commit()
 
     builder = InlineKeyboardBuilder()
     builder.button(text="🎯 Maqsad qo'shish", callback_data="newgoal")

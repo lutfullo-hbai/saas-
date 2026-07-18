@@ -13,9 +13,13 @@ from src.application.use_cases.process_checkin import ProcessCheckInUseCase
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
 from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.infrastructure.db.models.user import UserModel
+from src.infrastructure.db.repositories.checkin_repository import PostgresCheckInRepository
 from src.infrastructure.db.repositories.score_repository import PostgresScoreRepository
 from src.infrastructure.db.repositories.scheduled_task_repository import (
     PostgresScheduledTaskRepository,
+)
+from src.infrastructure.db.repositories.task_template_repository import (
+    PostgresTaskTemplateRepository,
 )
 from src.infrastructure.db.session import async_session_factory
 from src.infrastructure.telegram.bot import bot
@@ -143,50 +147,16 @@ async def handle_checkin_done(callback: CallbackQuery) -> None:
         async with async_session_factory() as session:
             task_repo = PostgresScheduledTaskRepository(session)
             score_repo = PostgresScoreRepository(session)
-            use_case = ProcessCheckInUseCase(task_repo, score_repo, session)
+            checkin_repo = PostgresCheckInRepository(session)
+            template_repo = PostgresTaskTemplateRepository(session)
+            use_case = ProcessCheckInUseCase(
+                task_repo, score_repo, checkin_repo, template_repo
+            )
 
             task_uuid = UUID(task_id)
             task = await task_repo.get_by_id(task_uuid)
             if not task:
                 await callback.message.edit_text("❌ Vazifa topilmadi.")
-                await callback.answer()
-                return
-
-            from src.infrastructure.db.models.task_template import TaskTemplateModel
-            from src.infrastructure.db.models.plan import PlanModel
-            from src.infrastructure.db.models.goal import GoalModel
-
-            template_result = await session.execute(
-                select(TaskTemplateModel).where(
-                    TaskTemplateModel.id == task.task_template_id
-                )
-            )
-            template = template_result.scalar_one_or_none()
-            if not template:
-                await callback.message.edit_text("❌ Vazifa shabloni topilmadi.")
-                await callback.answer()
-                return
-
-            plan_result = await session.execute(
-                select(PlanModel).where(PlanModel.id == template.plan_id)
-            )
-            plan = plan_result.scalar_one_or_none()
-            if not plan:
-                await callback.message.edit_text("❌ Reja topilmadi.")
-                await callback.answer()
-                return
-
-            goal_result = await session.execute(
-                select(GoalModel).where(
-                    GoalModel.id == plan.goal_id,
-                    GoalModel.user_id == UUID(user_id),
-                )
-            )
-            goal = goal_result.scalar_one_or_none()
-            if not goal:
-                await callback.message.edit_text(
-                    "❌ Bu vazifa sizga tegishli emas."
-                )
                 await callback.answer()
                 return
 

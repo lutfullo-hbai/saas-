@@ -1,5 +1,6 @@
 """Insights API endpoints."""
 
+from datetime import date, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -68,3 +69,56 @@ async def get_progress(
         completed_tasks=completed_tasks,
         avg_score=round(float(avg_score), 2),
     )
+
+
+@router.get("/{user_id}/progress/weekly")
+async def get_weekly_progress(
+    user_id: UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> list[dict]:
+    """Har bir kun uchun haftalik progress (7 kun)."""
+    if user_id != current_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Ruxsat yo'q",
+        )
+
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())
+    days = []
+
+    for i in range(7):
+        day = week_start + timedelta(days=i)
+        tasks_result = await session.execute(
+            select(ScheduledTaskModel)
+            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
+            .join(GoalModel, GoalModel.id == PlanModel.goal_id)
+            .where(
+                GoalModel.user_id == user_id,
+                ScheduledTaskModel.scheduled_date == day,
+            )
+        )
+        tasks = tasks_result.scalars().all()
+        total = len(tasks)
+        completed = sum(1 for t in tasks if t.status == "completed")
+
+        score_result = await session.execute(
+            select(func.avg(ScoreEventModel.computed_score))
+            .join(CheckInModel, CheckInModel.id == ScoreEventModel.checkin_id)
+            .join(ScheduledTaskModel, ScheduledTaskModel.id == CheckInModel.scheduled_task_id)
+            .where(ScheduledTaskModel.scheduled_date == day)
+        )
+        avg_score = score_result.scalar() or 0.0
+
+        day_names = ["Dush", "Sesh", "Chor", "Pay", "Jum", "Shan", "Yak"]
+        days.append({
+            "day": day_names[i],
+            "date": day.isoformat(),
+            "completed": completed,
+            "total": total,
+            "score": round(float(avg_score), 2) if avg_score else 0,
+        })
+
+    return days

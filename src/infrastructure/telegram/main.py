@@ -8,6 +8,7 @@ from src.infrastructure.telegram.handlers import (
     checkin_router,
     feedback_router,
     goal_router,
+    goals_list_router,
     help_router,
     onboarding_router,
     progress_router,
@@ -24,6 +25,7 @@ async def main() -> None:
     dp.include_router(help_router)
     dp.include_router(onboarding_router)
     dp.include_router(goal_router)
+    dp.include_router(goals_list_router)
     dp.include_router(checkin_router)
     dp.include_router(progress_router)
     dp.include_router(feedback_router)
