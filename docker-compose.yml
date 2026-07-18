@@ -155,6 +155,17 @@ services:
       - ./landing/index.html:/var/www/landing/index.html:ro
     depends_on:
       - api
+      - frontend
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    expose:
+      - "3000"
+    depends_on:
+      - api
 
 volumes:
   postgres_data:
