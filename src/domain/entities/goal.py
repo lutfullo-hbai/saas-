@@ -29,7 +29,3 @@ class Goal:
                 f"Noto'g'ri status: {self.status}. "
                 f"Mavjud: {VALID_GOAL_STATUSES}"
             )
-        if self.target_date and self.target_date < date.today():
-            raise InvalidEntityError(
-                "Target date o'tmishda bo'lishi mumkin emas"
-            )

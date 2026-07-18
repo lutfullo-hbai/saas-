@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from src.presentation.schemas.checkin import CheckInResponse
+
 
 class ScoreEventResponse(BaseModel):
     """Ball hodisasi javobi."""

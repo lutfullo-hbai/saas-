@@ -7,9 +7,14 @@ from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from src.config.settings import settings
 from src.infrastructure.db.models import Base
 
 config = context.config
+
+if not config.get_main_option("sqlalchemy.url"):
+    config.set_main_option("sqlalchemy.url", settings.database_url)
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 

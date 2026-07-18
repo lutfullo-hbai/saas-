@@ -26,7 +26,3 @@ class ScheduledTask:
                 f"Noto'g'ri status: {self.status}. "
                 f"Mavjud: {VALID_TASK_STATUSES}"
             )
-        if self.notification_sent_at and self.notification_sent_at > datetime.utcnow():
-            raise InvalidEntityError(
-                "Notification_sent_at kelajakda bo'lishi mumkin emas"
-            )
