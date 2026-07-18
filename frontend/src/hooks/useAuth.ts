@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 
 interface User {
-  id: string
-  telegram_id: number
+  id: string | number
+  telegram_id: string | number
   username: string
   first_name: string
 }
