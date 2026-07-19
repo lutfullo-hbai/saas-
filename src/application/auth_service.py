@@ -1,7 +1,7 @@
 """Auth service — register, login, refresh, logout."""
 
-from datetime import datetime, timedelta, timezone
-from uuid import UUID, uuid4
+from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -80,7 +80,7 @@ class AuthService:
             raise AuthError("Hisob faol emas")
 
         # Last login yangilash
-        user.last_login_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        user.last_login_at = datetime.now(UTC).replace(tzinfo=None)
         user.last_login_ip = ip_address
         await self.session.flush()
 
@@ -103,7 +103,7 @@ class AuthService:
             raise AuthError("Sessiya topilmadi yoki bekor qilingan")
 
         # Token muddati tugaganini tekshirish
-        if session.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+        if session.expires_at < datetime.now(UTC).replace(tzinfo=None):
             session.is_active = False
             await self.session.flush()
             raise AuthError("Sessiya muddati tugagan")
@@ -145,7 +145,7 @@ class AuthService:
             update(UserSessionModel)
             .where(
                 UserSessionModel.user_id == user_id,
-                UserSessionModel.is_active == True,
+                UserSessionModel.is_active,
             )
             .values(is_active=False)
         )
@@ -159,7 +159,7 @@ class AuthService:
         result = await self.session.execute(
             select(UserSessionModel).where(
                 UserSessionModel.user_id == user_id,
-                UserSessionModel.is_active == True,
+                UserSessionModel.is_active,
             )
         )
         sessions = result.scalars().all()
@@ -197,7 +197,7 @@ class AuthService:
             refresh_token_jti=payload["jti"],
             ip_address=ip_address,
             is_active=True,
-            expires_at=datetime.now(timezone.utc).replace(tzinfo=None)
+            expires_at=datetime.now(UTC).replace(tzinfo=None)
             + timedelta(days=30),
         )
         self.session.add(session)

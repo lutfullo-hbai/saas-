@@ -1,6 +1,5 @@
 """Authentication API endpoints — email-based auth."""
 
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
@@ -17,7 +16,6 @@ from src.presentation.api.dependencies import (
 from src.presentation.schemas.auth import (
     LoginRequest,
     LogoutRequest,
-    LogoutAllRequest,
     PasswordChangeRequest,
     RefreshTokenRequest,
     RegisterRequest,
@@ -55,7 +53,7 @@ async def register(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e),
-        )
+        ) from None
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -80,7 +78,7 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
-        )
+        ) from None
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -104,7 +102,7 @@ async def refresh_token(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
-        )
+        ) from None
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

@@ -1,13 +1,6 @@
 """Repository implementations package."""
 
-from src.infrastructure.db.repositories.goal_repository import PostgresGoalRepository
-from src.infrastructure.db.repositories.scheduled_task_repository import (
-    PostgresScheduledTaskRepository,
-)
-from src.infrastructure.db.repositories.score_repository import PostgresScoreRepository
-from src.infrastructure.db.repositories.user_repository import PostgresUserRepository
-
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from uuid import UUID
 
 from sqlalchemy import select
@@ -17,6 +10,12 @@ from src.infrastructure.db.models.checkin import CheckInModel
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
 from src.infrastructure.db.models.score_event import ScoreEventModel
 from src.infrastructure.db.models.task_template import TaskTemplateModel
+from src.infrastructure.db.repositories.goal_repository import PostgresGoalRepository
+from src.infrastructure.db.repositories.scheduled_task_repository import (
+    PostgresScheduledTaskRepository,
+)
+from src.infrastructure.db.repositories.score_repository import PostgresScoreRepository
+from src.infrastructure.db.repositories.user_repository import PostgresUserRepository
 from src.infrastructure.db.session import async_session_factory
 
 logger = get_logger(__name__)
@@ -33,7 +32,7 @@ async def get_active_task_templates() -> list[dict]:
     """Get all active task templates."""
     async with async_session_factory() as session:
         result = await session.execute(
-            select(TaskTemplateModel).where(TaskTemplateModel.is_active == True)
+            select(TaskTemplateModel).where(TaskTemplateModel.is_active)
         )
         templates = result.scalars().all()
         return [
@@ -139,7 +138,7 @@ async def mark_notification_sent(task_id: UUID) -> None:
         )
         task = result.scalar_one_or_none()
         if task:
-            task.notification_sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            task.notification_sent_at = datetime.now(UTC).replace(tzinfo=None)
             await session.commit()
             logger.info(f"Marking notification sent for task {task_id}")
 
@@ -190,7 +189,7 @@ async def create_missed_score_event(
     async with async_session_factory() as session:
         checkin = CheckInModel(
             scheduled_task_id=scheduled_task_id,
-            checkin_time=datetime.now(timezone.utc).replace(tzinfo=None),
+            checkin_time=datetime.now(UTC).replace(tzinfo=None),
             method="auto_missed",
             user_note="",
         )
