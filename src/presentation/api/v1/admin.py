@@ -16,7 +16,6 @@ from src.infrastructure.db.models.user import UserModel
 from src.presentation.api.dependencies import (
     CurrentUser,
     get_current_admin_user,
-    get_current_user,
     get_db,
 )
 
@@ -84,7 +83,7 @@ async def get_system_stats(
 
 @router.get("/precision-engine")
 async def get_precision_engine_params(
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_admin_user),
     session: AsyncSession = Depends(get_db),
 ) -> PrecisionEngineParams:
     """Precision Engine parametrlarini DB'dan olish."""
@@ -163,15 +162,13 @@ async def update_precision_engine_params(
 async def list_users(
     page: int = 1,
     limit: int = 20,
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_admin_user),
     session: AsyncSession = Depends(get_db),
 ) -> dict:
     """Foydalanuvchilar ro'yxati."""
     offset = (page - 1) * limit
 
-    users_result = await session.execute(
-        select(UserModel).offset(offset).limit(limit)
-    )
+    users_result = await session.execute(select(UserModel).offset(offset).limit(limit))
     users = users_result.scalars().all()
 
     total_result = await session.execute(select(func.count(UserModel.id)))
@@ -206,13 +203,11 @@ async def list_users(
 @router.get("/users/{user_id}")
 async def get_user_details(
     user_id: UUID,
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_admin_user),
     session: AsyncSession = Depends(get_db),
 ) -> dict:
     """Foydalanuvchi tafsilotlari."""
-    result = await session.execute(
-        select(UserModel).where(UserModel.id == user_id)
-    )
+    result = await session.execute(select(UserModel).where(UserModel.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(
@@ -227,7 +222,10 @@ async def get_user_details(
 
     tasks_result = await session.execute(
         select(ScheduledTaskModel)
-        .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+        .join(
+            TaskTemplateModel,
+            TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+        )
         .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
         .join(GoalModel, GoalModel.id == PlanModel.goal_id)
         .where(GoalModel.user_id == user_id)
@@ -244,4 +242,73 @@ async def get_user_details(
         "goals_count": len(goals),
         "tasks_completed": completed_tasks,
         "created_at": user.created_at.isoformat() if user.created_at else "",
+    }
+
+
+# --- Backup & Restore ---
+
+
+class BackupListItem(BaseModel):
+    """Backup ro'yxati elementi."""
+
+    file: str
+    filename: str
+    size_bytes: int
+    created_at: str
+
+
+@router.get("/backups")
+async def list_backups(
+    current_user: CurrentUser = Depends(get_current_admin_user),
+) -> dict:
+    """Mavjud backup fayllar ro'yxati."""
+    from src.infrastructure.scheduler.tasks_backup import list_available_backups
+
+    result = list_available_backups.delay()
+    data = result.get(timeout=10)
+
+    return {
+        "backups": data.get("backups", []),
+        "total": data.get("total", 0),
+    }
+
+
+class RestoreRequest(BaseModel):
+    """Restore so'rovi."""
+
+    backup_file: str
+
+
+@router.post("/restore")
+async def restore_backup(
+    request: RestoreRequest,
+    current_user: CurrentUser = Depends(get_current_admin_user),
+) -> dict:
+    """Backup'dan restore ishga tushirish.
+
+    Faqat admin foydalanuvchi restore qila oladi.
+    """
+    import os
+
+    if not os.path.exists(request.backup_file):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Backup fayli topilmadi",
+        )
+
+    if not request.backup_file.endswith(".sql.gz"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Faqat .sql.gz backup fayllari qo'llab-quvvatlanadi",
+        )
+
+    from src.infrastructure.scheduler.tasks_backup import restore_from_backup
+
+    task = restore_from_backup.delay(request.backup_file)
+
+    return {
+        "status": "restore_started",
+        "task_id": task.id,
+        "backup_file": request.backup_file,
+        "message": "Restore jarayoni boshlandi. Task ID orqali kuzatish mumkin.",
     }

@@ -9,16 +9,15 @@ DB_PORT="${DB_PORT:-5432}"
 DB_NAME="${POSTGRES_DB:-disipl}"
 DB_USER="${POSTGRES_USER:-disipl}"
 BACKUP_DIR="/backups"
+AUTO_CONFIRM="${AUTO_CONFIRM:-false}"
 
 # Check if backup file is provided
-if [ -z "$1" ]; then
-    echo "Usage: $0 <backup_file>"
+if [ -z "$BACKUP_FILE" ]; then
+    echo "Usage: BACKUP_FILE=<path> $0"
     echo "Available backups:"
     ls -lh "$BACKUP_DIR"/${DB_NAME}_*.sql.gz 2>/dev/null || echo "No backups found"
     exit 1
 fi
-
-BACKUP_FILE="$1"
 
 # Check if backup file exists
 if [ ! -f "$BACKUP_FILE" ]; then
@@ -26,14 +25,16 @@ if [ ! -f "$BACKUP_FILE" ]; then
     exit 1
 fi
 
-# Confirm restore
-echo "WARNING: This will overwrite the current database!"
-echo "Backup file: $BACKUP_FILE"
-read -p "Are you sure? (yes/no): " CONFIRM
+# Confirm restore (skip if AUTO_CONFIRM=true)
+if [ "$AUTO_CONFIRM" != "true" ]; then
+    echo "WARNING: This will overwrite the current database!"
+    echo "Backup file: $BACKUP_FILE"
+    read -p "Are you sure? (yes/no): " CONFIRM
 
-if [ "$CONFIRM" != "yes" ]; then
-    echo "Restore cancelled."
-    exit 0
+    if [ "$CONFIRM" != "yes" ]; then
+        echo "Restore cancelled."
+        exit 0
+    fi
 fi
 
 # Perform restore

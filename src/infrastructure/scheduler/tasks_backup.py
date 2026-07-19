@@ -141,3 +141,98 @@ def verify_backup(self) -> dict:
     except Exception as e:
         logger.error("backup_verification_error", error=str(e))
         raise
+
+
+@celery_app.task(
+    bind=True,
+    max_retries=1,
+    default_retry_delay=600,
+)
+def restore_from_backup(self, backup_file: str) -> dict:
+    """Backup'dan avtomatik restore.
+
+    PostgreSQL backup faylini qayta tiklaydi.
+    """
+    from src.config.logging import setup_logging
+
+    setup_logging()
+
+    logger.info("restore_started", backup_file=backup_file)
+
+    try:
+        parsed = urlparse(settings.database_url)
+        db_name = parsed.path.lstrip("/") or "disipl"
+        db_user = parsed.username or "disipl"
+
+        result = subprocess.run(
+            ["bash", "scripts/restore.sh"],
+            capture_output=True,
+            text=True,
+            timeout=1200,
+            env={
+                **os.environ,
+                "DB_HOST": "db",
+                "DB_PORT": "5432",
+                "POSTGRES_DB": db_name,
+                "POSTGRES_USER": db_user,
+                "BACKUP_FILE": backup_file,
+                "AUTO_CONFIRM": "true",
+            },
+        )
+
+        if result.returncode == 0:
+            logger.info("restore_completed", backup_file=backup_file)
+            return {
+                "status": "success",
+                "backup_file": backup_file,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "output": result.stdout,
+            }
+        else:
+            logger.error("restore_failed", error=result.stderr)
+            return {
+                "status": "failed",
+                "backup_file": backup_file,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "error": result.stderr,
+            }
+
+    except subprocess.TimeoutExpired:
+        logger.error("restore_timeout", backup_file=backup_file)
+        raise
+    except Exception as e:
+        logger.error("restore_error", error=str(e))
+        raise
+
+
+@celery_app.task
+def list_available_backups() -> dict:
+    """Mavjud backup fayllar ro'yxatini qaytaradi."""
+    import glob
+
+    from src.config.logging import setup_logging
+
+    setup_logging()
+
+    backup_dir = "/backups"
+    pattern = f"{backup_dir}/*.sql.gz"
+    files = sorted(glob.glob(pattern), key=os.path.getctime, reverse=True)
+
+    backups = []
+    for f in files[:20]:
+        backups.append(
+            {
+                "file": f,
+                "filename": os.path.basename(f),
+                "size_bytes": os.path.getsize(f),
+                "created_at": datetime.fromtimestamp(
+                    os.path.getctime(f), tz=timezone.utc
+                ).isoformat(),
+            }
+        )
+
+    return {
+        "backups": backups,
+        "total": len(backups),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
