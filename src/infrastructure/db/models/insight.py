@@ -1,9 +1,9 @@
 """Insight SQLAlchemy model."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import ForeignKey, JSON, String, Text
+from sqlalchemy import JSON, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -28,5 +28,5 @@ class InsightModel(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     supporting_data: Mapped[dict] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )

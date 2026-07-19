@@ -14,7 +14,6 @@ Konfiguratsiya:
 
 import base64
 import hashlib
-import os
 
 from cryptography.fernet import Fernet, InvalidToken
 

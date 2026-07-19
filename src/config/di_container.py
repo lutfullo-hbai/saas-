@@ -3,15 +3,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
+from src.infrastructure.db.repositories.checkin_repository import (
+    PostgresCheckInRepository,
+)
 from src.infrastructure.db.repositories.goal_repository import PostgresGoalRepository
 from src.infrastructure.db.repositories.plan_repository import PostgresPlanRepository
 from src.infrastructure.db.repositories.scheduled_task_repository import (
     PostgresScheduledTaskRepository,
 )
 from src.infrastructure.db.repositories.score_repository import PostgresScoreRepository
-from src.infrastructure.db.repositories.checkin_repository import (
-    PostgresCheckInRepository,
-)
 from src.infrastructure.db.repositories.task_template_repository import (
     PostgresTaskTemplateRepository,
 )

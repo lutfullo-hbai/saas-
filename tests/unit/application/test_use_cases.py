@@ -1,7 +1,7 @@
 """Use case unit testlari."""
 
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -171,5 +171,5 @@ class TestProcessCheckInUseCase:
         with pytest.raises(AlreadyCheckedInError):
             await use_case.execute(
                 scheduled_task_id=task.id,
-                checkin_time=datetime.now(timezone.utc),
+                checkin_time=datetime.now(UTC),
             )

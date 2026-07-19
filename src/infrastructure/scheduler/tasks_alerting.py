@@ -7,7 +7,7 @@ Har 5 daqiqada ishga tushadi:
 4. Muammo topilsa, admin ga Telegram xabar yuboradi
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import httpx
 from sqlalchemy import func, select, text
@@ -87,12 +87,12 @@ def check_notification_delivery(self) -> dict:
 
     setup_logging()
 
-    threshold = datetime.now(timezone.utc) - timedelta(minutes=5)
+    threshold = datetime.now(UTC) - timedelta(minutes=5)
 
     try:
-        from src.infrastructure.db.session import async_session_factory
-
         import asyncio
+
+        from src.infrastructure.db.session import async_session_factory
 
         async def _check():
             async with async_session_factory() as session:
@@ -112,7 +112,7 @@ def check_notification_delivery(self) -> dict:
             message = (
                 f"⚠️ *Notification kechikdi!*\n\n"
                 f"{overdue_count} ta vazifa uchun notification hali yuborilmagan.\n"
-                f"Vaqt: {datetime.now(timezone.utc).isoformat()}\n"
+                f"Vaqt: {datetime.now(UTC).isoformat()}\n"
                 f"Chegaradan o'tgan: 5+ daqiqa"
             )
             asyncio.run(_send_telegram_alert(message))
@@ -120,7 +120,7 @@ def check_notification_delivery(self) -> dict:
 
         return {
             "overdue": overdue_count,
-            "checked_at": datetime.now(timezone.utc).isoformat(),
+            "checked_at": datetime.now(UTC).isoformat(),
         }
 
     except Exception as e:
@@ -144,6 +144,7 @@ def check_service_health(self) -> dict:
     setup_logging()
 
     import asyncio
+
     import redis.asyncio as aioredis
 
     issues = []
@@ -172,10 +173,10 @@ def check_service_health(self) -> dict:
 
         if issues:
             message = (
-                f"🔴 *Xizmatlar xatosi!*\n\n"
-                f"Quyidagi xizmatlarda muammo:\n"
+                "🔴 *Xizmatlar xatosi!*\n\n"
+                "Quyidagi xizmatlarda muammo:\n"
                 + "\n".join(f"• {issue}" for issue in issues)
-                + f"\n\nVaqt: {datetime.now(timezone.utc).isoformat()}"
+                + f"\n\nVaqt: {datetime.now(UTC).isoformat()}"
             )
             asyncio.run(_send_telegram_alert(message))
             logger.error("service_health_issues", issues=issues)
@@ -183,7 +184,7 @@ def check_service_health(self) -> dict:
         return {
             "healthy": len(issues) == 0,
             "issues": issues,
-            "checked_at": datetime.now(timezone.utc).isoformat(),
+            "checked_at": datetime.now(UTC).isoformat(),
         }
 
     except Exception as e:
@@ -227,7 +228,7 @@ def check_pending_tasks_backlog(self) -> dict:
                 f"⚠️ *Vazifalar to'plandi!*\n\n"
                 f"{pending_count} ta bajarilmagan vazifa mavjud.\n"
                 f"Celery worker to'xtab qolgan bo'lishi mumkin.\n"
-                f"Vaqt: {datetime.now(timezone.utc).isoformat()}"
+                f"Vaqt: {datetime.now(UTC).isoformat()}"
             )
             asyncio.run(_send_telegram_alert(message))
             logger.warning("task_backlog_detected", count=pending_count)
@@ -235,7 +236,7 @@ def check_pending_tasks_backlog(self) -> dict:
         return {
             "pending_count": pending_count,
             "alert": pending_count > 100,
-            "checked_at": datetime.now(timezone.utc).isoformat(),
+            "checked_at": datetime.now(UTC).isoformat(),
         }
 
     except Exception as e:

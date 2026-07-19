@@ -1,9 +1,10 @@
 """Multi-tenant security audit and isolation."""
 
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
-from fastapi import Request, HTTPException, status
+from fastapi import HTTPException, Request, status
 
 from src.config.logging import get_logger
 

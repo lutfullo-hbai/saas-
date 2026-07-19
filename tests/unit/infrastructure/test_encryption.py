@@ -1,8 +1,6 @@
 """Unit tests for encryption at rest."""
 
-import pytest
-
-from src.infrastructure.security.encryption import encrypt_field, decrypt_field
+from src.infrastructure.security.encryption import decrypt_field, encrypt_field
 
 
 class TestEncryption:

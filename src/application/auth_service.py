@@ -197,8 +197,7 @@ class AuthService:
             refresh_token_jti=payload["jti"],
             ip_address=ip_address,
             is_active=True,
-            expires_at=datetime.now(UTC).replace(tzinfo=None)
-            + timedelta(days=30),
+            expires_at=datetime.now(UTC).replace(tzinfo=None) + timedelta(days=30),
         )
         self.session.add(session)
         await self.session.flush()

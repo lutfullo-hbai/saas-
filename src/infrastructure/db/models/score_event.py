@@ -1,9 +1,9 @@
 """ScoreEvent SQLAlchemy model."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import Float, ForeignKey, JSON, String
+from sqlalchemy import JSON, Float, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -31,5 +31,5 @@ class ScoreEventModel(Base):
     )
     calculation_meta: Mapped[dict] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )

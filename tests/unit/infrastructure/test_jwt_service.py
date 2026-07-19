@@ -2,8 +2,6 @@
 
 from uuid import uuid4
 
-import pytest
-
 from src.infrastructure.auth.jwt_service import (
     create_access_token,
     create_refresh_token,

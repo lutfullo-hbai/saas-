@@ -1,9 +1,5 @@
 """Unit tests for application limits."""
 
-from unittest.mock import MagicMock, patch
-
-import pytest
-
 from src.application.limits import SubscriptionTier, UserLimits
 
 

@@ -1,22 +1,16 @@
 """Global test fixtures."""
 
 import os
-from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # Test muhitini oldindan o'rnatish — RateLimitMiddleware o'chiriladi
 os.environ["APP_ENV"] = "testing"
 
-from src.config.settings import settings
-from src.infrastructure.db.models.base import Base
 from src.infrastructure.db.session import async_session_factory
-from src.presentation.api.app import app
-from src.presentation.api.dependencies import get_db
 
 
 @pytest.fixture

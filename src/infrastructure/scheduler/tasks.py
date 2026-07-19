@@ -2,7 +2,6 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from uuid import UUID
 
 from dateutil.rrule import rrulestr
 
@@ -57,9 +56,9 @@ def generate_scheduled_tasks(self) -> dict:
     tomorrow_end = datetime.combine(tomorrow, datetime.max.time())
 
     from src.infrastructure.db.repositories import (
+        create_scheduled_task,
         get_active_task_templates,
         get_scheduled_tasks_by_date,
-        create_scheduled_task,
     )
 
     try:
@@ -130,8 +129,8 @@ def send_notifications() -> dict:
         mark_notification_sent,
     )
     from src.infrastructure.telegram.notifier import (
-        send_task_notification,
         get_user_telegram_id_for_task,
+        send_task_notification,
     )
 
     try:
@@ -191,9 +190,9 @@ def mark_missed_checkins() -> dict:
     threshold = datetime.now() - timedelta(hours=3)
 
     from src.infrastructure.db.repositories import (
+        create_missed_score_event,
         get_overdue_pending_tasks,
         mark_task_missed,
-        create_missed_score_event,
     )
 
     try:

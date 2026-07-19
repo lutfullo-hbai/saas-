@@ -5,10 +5,9 @@ va tasdiqlaydi yoki rad etadi.
 """
 
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, Message
-from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery
 
 from src.config.logging import get_logger
 
@@ -69,7 +68,7 @@ async def review_pending_plan(callback: CallbackQuery, state: FSMContext) -> Non
     await state.set_state(PlanApprovalState.viewing_plan)
     await state.update_data(plan_id=plan["id"])
 
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -95,7 +94,7 @@ async def review_pending_plan(callback: CallbackQuery, state: FSMContext) -> Non
 @router.callback_query(F.data == "plan_approve")
 async def approve_plan(callback: CallbackQuery, state: FSMContext) -> None:
     """Rejani tasdiqlash."""
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
     await state.set_state(PlanApprovalState.confirming_approve)
 
@@ -142,7 +141,7 @@ async def edit_plan(callback: CallbackQuery, state: FSMContext) -> None:
     """Rejani tahrirlash."""
     await state.set_state(PlanApprovalState.editing_task)
 
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -188,7 +187,7 @@ async def edit_tasks(callback: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(F.data == "plan_reject")
 async def reject_plan(callback: CallbackQuery, state: FSMContext) -> None:
     """Rejani rad etish."""
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[

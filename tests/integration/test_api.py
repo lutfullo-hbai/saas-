@@ -158,7 +158,6 @@ class TestAuthAPI:
 
     @pytest.mark.asyncio
     async def test_logout_all(self, client):
-        email = "logoutall_test_001@disipl.test"
         h = await _auth(client, "logoutall_001")
         r = await client.post("/api/v1/auth/logout-all", headers=h)
         assert r.status_code == 204

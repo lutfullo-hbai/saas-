@@ -162,7 +162,7 @@ async def confirm_goal_yes(callback: CallbackQuery, state: FSMContext) -> None:
         async with async_session_factory() as session:
             goal_repo = PostgresGoalRepository(session)
             use_case = CreateGoalUseCase(goal_repo)
-            goal = await use_case.execute(
+            await use_case.execute(
                 user_id=user_id,
                 title=title,
                 description=description or "",

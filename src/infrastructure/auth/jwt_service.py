@@ -1,7 +1,7 @@
 """JWT authentication service with refresh token support."""
 
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from jose import JWTError, jwt
@@ -13,15 +13,13 @@ def create_access_token(
     user_id: UUID, email: str, telegram_id: int | None = None
 ) -> str:
     """Access token yaratish — qisqa muddatli (15 daqiqa)."""
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.jwt_expiration_minutes
-    )
+    expire = datetime.now(UTC) + timedelta(minutes=settings.jwt_expiration_minutes)
     payload = {
         "sub": str(user_id),
         "email": email,
         "type": "access",
         "exp": expire,
-        "iat": datetime.now(timezone.utc),
+        "iat": datetime.now(UTC),
     }
     if telegram_id is not None:
         payload["telegram_id"] = telegram_id
@@ -39,16 +37,14 @@ def create_refresh_token(
     Har bir token unique JTI (JWT ID) ga ega.
     """
     jti = secrets.token_hex(16)
-    expire = datetime.now(timezone.utc) + timedelta(
-        days=settings.jwt_refresh_expiration_days
-    )
+    expire = datetime.now(UTC) + timedelta(days=settings.jwt_refresh_expiration_days)
     payload = {
         "sub": str(user_id),
         "email": email,
         "type": "refresh",
         "jti": jti,
         "exp": expire,
-        "iat": datetime.now(timezone.utc),
+        "iat": datetime.now(UTC),
     }
     if telegram_id is not None:
         payload["telegram_id"] = telegram_id

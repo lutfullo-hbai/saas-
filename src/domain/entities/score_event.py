@@ -1,7 +1,7 @@
 """ScoreEvent domain entity."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from src.domain.exceptions import InvalidEntityError
@@ -18,7 +18,7 @@ class ScoreEvent:
     formula_version: str = "v1"
     calculation_meta: dict = field(default_factory=dict)
     created_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
     )
 
     def __post_init__(self) -> None:

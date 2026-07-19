@@ -1,12 +1,9 @@
 """Security tests for multi-tenant isolation."""
 
-import pytest
-from unittest.mock import MagicMock
-
 from src.infrastructure.security.tenant import (
-    TenantIsolation,
-    SecurityAuditLog,
     InputSanitizer,
+    SecurityAuditLog,
+    TenantIsolation,
 )
 
 

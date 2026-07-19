@@ -1,7 +1,7 @@
 """Goal SQLAlchemy model."""
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -28,5 +28,5 @@ class GoalModel(Base):
         String(50), nullable=False, default="active", index=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )

@@ -1,6 +1,5 @@
 """Rate limiting and request tracking middleware using Redis."""
 
-import time
 import uuid
 from collections.abc import Callable
 

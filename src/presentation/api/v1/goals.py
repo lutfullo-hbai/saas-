@@ -22,7 +22,7 @@ async def _get_user_tier(user_id: UUID, session: AsyncSession) -> SubscriptionTi
     result = await session.execute(
         select(SubscriptionModel).where(
             SubscriptionModel.user_id == user_id,
-            SubscriptionModel.is_active == True,
+            SubscriptionModel.is_active,
         )
     )
     sub = result.scalar_one_or_none()

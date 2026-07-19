@@ -1,9 +1,9 @@
 """User SQLAlchemy model."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, ForeignKey, Index, JSON, String, Text
+from sqlalchemy import JSON, Boolean, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -31,7 +31,7 @@ class UserModel(Base):
     timezone: Mapped[str] = mapped_column(String(50), nullable=False, default="UTC")
     notification_prefs: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )
     updated_at: Mapped[datetime | None] = mapped_column(nullable=True)
     last_login_at: Mapped[datetime | None] = mapped_column(nullable=True)
@@ -69,10 +69,10 @@ class UserSessionModel(Base):
     user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )
     last_used_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )
     expires_at: Mapped[datetime] = mapped_column(nullable=False)
 

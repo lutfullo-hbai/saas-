@@ -6,7 +6,7 @@ Backup natijasi admin ga xabar beriladi.
 
 import os
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from urllib.parse import urlparse
 
 from src.config.logging import get_logger
@@ -56,14 +56,14 @@ def run_daily_backup(self) -> dict:
             logger.info("daily_backup_completed", output=result.stdout)
             return {
                 "status": "success",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "output": result.stdout,
             }
         else:
             logger.error("daily_backup_failed", error=result.stderr)
             return {
                 "status": "failed",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "error": result.stderr,
             }
 
@@ -85,8 +85,8 @@ def verify_backup(self) -> dict:
 
     Backup faylini topib, uning hajmini va yaratilgan vaqtini tekshiradi.
     """
-    import os
     import glob
+    import os
 
     from src.config.logging import setup_logging
 
@@ -105,7 +105,7 @@ def verify_backup(self) -> dict:
             logger.warning("no_backups_found")
             return {
                 "status": "no_backups",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
 
         # Eng so'nggi backup
@@ -135,7 +135,7 @@ def verify_backup(self) -> dict:
             "file": latest,
             "size_bytes": file_size,
             "created_at": file_time.isoformat(),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
     except Exception as e:
@@ -185,7 +185,7 @@ def restore_from_backup(self, backup_file: str) -> dict:
             return {
                 "status": "success",
                 "backup_file": backup_file,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "output": result.stdout,
             }
         else:
@@ -193,7 +193,7 @@ def restore_from_backup(self, backup_file: str) -> dict:
             return {
                 "status": "failed",
                 "backup_file": backup_file,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "error": result.stderr,
             }
 
@@ -226,7 +226,7 @@ def list_available_backups() -> dict:
                 "filename": os.path.basename(f),
                 "size_bytes": os.path.getsize(f),
                 "created_at": datetime.fromtimestamp(
-                    os.path.getctime(f), tz=timezone.utc
+                    os.path.getctime(f), tz=UTC
                 ).isoformat(),
             }
         )
@@ -234,5 +234,5 @@ def list_available_backups() -> dict:
     return {
         "backups": backups,
         "total": len(backups),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }

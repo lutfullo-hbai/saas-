@@ -7,12 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.infrastructure.db.models.checkin import CheckInModel
 from src.infrastructure.db.models.goal import GoalModel
 from src.infrastructure.db.models.plan import PlanModel
-from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
 from src.infrastructure.db.models.score_event import ScoreEventModel
-from src.infrastructure.db.models.checkin import CheckInModel
+from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.presentation.api.dependencies import CurrentUser, get_current_user, get_db
 from src.presentation.schemas.progress import ProgressResponse
 

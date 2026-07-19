@@ -5,8 +5,8 @@ from uuid import UUID
 
 from src.application.interfaces import (
     ICheckInRepository,
-    IScoreRepository,
     IScheduledTaskRepository,
+    IScoreRepository,
     ITaskTemplateRepository,
 )
 from src.domain.entities.checkin import CheckIn

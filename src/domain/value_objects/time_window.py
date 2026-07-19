@@ -1,7 +1,7 @@
 """TimeWindow value object."""
 
 from dataclasses import dataclass
-from datetime import time, datetime
+from datetime import datetime, time
 
 
 @dataclass(frozen=True)

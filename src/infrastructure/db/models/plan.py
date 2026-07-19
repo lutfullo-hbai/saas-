@@ -1,7 +1,7 @@
 """Plan SQLAlchemy model."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -25,5 +25,5 @@ class PlanModel(Base):
     source: Mapped[str] = mapped_column(String(50), nullable=False, default="manual")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )

@@ -41,9 +41,7 @@ class PostgresPlanRepository(IPlanRepository):
 
     async def get_active_plan(self, goal_id: UUID) -> Plan | None:
         result = await self._session.execute(
-            select(PlanModel).where(
-                PlanModel.goal_id == goal_id, PlanModel.is_active == True
-            )
+            select(PlanModel).where(PlanModel.goal_id == goal_id, PlanModel.is_active)
         )
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None

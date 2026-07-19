@@ -2,10 +2,9 @@
 
 import hashlib
 import hmac
-import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 
 import httpx
@@ -514,7 +513,7 @@ class SubscriptionService:
             update(SubscriptionModel.__table__)
             .where(
                 SubscriptionModel.__table__.c.user_id == user_id,
-                SubscriptionModel.__table__.c.is_active == True,
+                SubscriptionModel.__table__.c.is_active,
             )
             .values(is_active=False)
         )
@@ -523,8 +522,8 @@ class SubscriptionService:
         subscription = SubscriptionModel(
             user_id=user_id,
             tier=tier,
-            started_at=datetime.now(timezone.utc).replace(tzinfo=None),
-            expires_at=datetime.now(timezone.utc).replace(tzinfo=None)
+            started_at=datetime.now(UTC).replace(tzinfo=None),
+            expires_at=datetime.now(UTC).replace(tzinfo=None)
             + timedelta(days=self.PRO_DURATION_DAYS),
             payment_method=payment_method,
             transaction_id=transaction_id,
@@ -540,12 +539,12 @@ class SubscriptionService:
         result = await self._session.execute(
             select(SubscriptionModel).where(
                 SubscriptionModel.user_id == user_id,
-                SubscriptionModel.is_active == True,
+                SubscriptionModel.is_active,
             )
         )
         sub = result.scalar_one_or_none()
 
-        if sub and sub.expires_at and sub.expires_at > datetime.now(timezone.utc):
+        if sub and sub.expires_at and sub.expires_at > datetime.now(UTC):
             return Subscription(
                 user_id=user_id,
                 tier=SubscriptionTier(sub.tier),

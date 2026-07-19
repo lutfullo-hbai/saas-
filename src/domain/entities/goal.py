@@ -1,7 +1,7 @@
 """Goal domain entity."""
 
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from uuid import UUID, uuid4
 
 from src.domain.exceptions import InvalidEntityError
@@ -20,7 +20,7 @@ class Goal:
     target_date: date | None = None
     status: str = "active"
     created_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
     )
 
     def __post_init__(self) -> None:

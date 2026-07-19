@@ -1,9 +1,8 @@
 """Check-ins API endpoints."""
 
-from datetime import date, datetime, timezone
-from uuid import UUID
+from datetime import UTC, date, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -82,7 +81,7 @@ async def create_checkin(
 
     checkin, score_event = await use_case.execute(
         scheduled_task_id=request.scheduled_task_id,
-        checkin_time=datetime.now(timezone.utc).replace(tzinfo=None),
+        checkin_time=datetime.now(UTC).replace(tzinfo=None),
         method=request.method,
         user_note=request.user_note,
     )

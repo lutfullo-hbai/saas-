@@ -36,10 +36,10 @@ class PostgresScoreRepository(IScoreRepository):
 
     async def get_by_user_id(self, user_id: UUID) -> list[ScoreEvent]:
         from src.infrastructure.db.models.checkin import CheckInModel
+        from src.infrastructure.db.models.goal import GoalModel
+        from src.infrastructure.db.models.plan import PlanModel
         from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
         from src.infrastructure.db.models.task_template import TaskTemplateModel
-        from src.infrastructure.db.models.plan import PlanModel
-        from src.infrastructure.db.models.goal import GoalModel
 
         result = await self._session.execute(
             select(ScoreEventModel)

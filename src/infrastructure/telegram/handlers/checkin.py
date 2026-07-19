@@ -1,6 +1,6 @@
 """Check-in handler with inline keyboard buttons."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from uuid import UUID
 
 from aiogram import Router
@@ -16,15 +16,14 @@ from src.infrastructure.db.models.user import UserModel
 from src.infrastructure.db.repositories.checkin_repository import (
     PostgresCheckInRepository,
 )
-from src.infrastructure.db.repositories.score_repository import PostgresScoreRepository
 from src.infrastructure.db.repositories.scheduled_task_repository import (
     PostgresScheduledTaskRepository,
 )
+from src.infrastructure.db.repositories.score_repository import PostgresScoreRepository
 from src.infrastructure.db.repositories.task_template_repository import (
     PostgresTaskTemplateRepository,
 )
 from src.infrastructure.db.session import async_session_factory
-from src.infrastructure.telegram.bot import bot
 
 router = Router()
 
@@ -67,8 +66,8 @@ async def _get_today_tasks(user_id: str) -> list[dict]:
             if not template:
                 continue
 
-            from src.infrastructure.db.models.plan import PlanModel
             from src.infrastructure.db.models.goal import GoalModel
+            from src.infrastructure.db.models.plan import PlanModel
 
             plan_result = await session.execute(
                 select(PlanModel).where(PlanModel.id == template.plan_id)
@@ -170,7 +169,7 @@ async def handle_checkin_done(callback: CallbackQuery) -> None:
 
             checkin, score_event = await use_case.execute(
                 scheduled_task_id=task_uuid,
-                checkin_time=datetime.now(timezone.utc).replace(tzinfo=None),
+                checkin_time=datetime.now(UTC).replace(tzinfo=None),
                 method="telegram",
                 user_note="",
             )

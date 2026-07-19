@@ -2,7 +2,7 @@
 
 import secrets
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -91,7 +91,7 @@ class ReferralService:
             return False
 
         referral.referred_id = new_user_id
-        referral.used_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        referral.used_at = datetime.now(UTC).replace(tzinfo=None)
         await self._session.flush()
 
         logger.info(f"Referral code {code} used by user {new_user_id}")

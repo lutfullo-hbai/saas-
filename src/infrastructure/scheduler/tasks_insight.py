@@ -44,13 +44,13 @@ async def gather_user_weekly_data(user_id: UUID) -> dict | None:
     Returns:
         dict yoki None (agar ma'lumot yetarli bo'lmasa)
     """
-    from src.infrastructure.db.session import async_session_factory
+    from src.infrastructure.db.models.checkin import CheckInModel
     from src.infrastructure.db.models.goal import GoalModel
     from src.infrastructure.db.models.plan import PlanModel
-    from src.infrastructure.db.models.task_template import TaskTemplateModel
     from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
     from src.infrastructure.db.models.score_event import ScoreEventModel
-    from src.infrastructure.db.models.checkin import CheckInModel
+    from src.infrastructure.db.models.task_template import TaskTemplateModel
+    from src.infrastructure.db.session import async_session_factory
 
     async with async_session_factory() as session:
         week_ago = datetime.now() - timedelta(days=7)
@@ -130,7 +130,7 @@ async def gather_user_weekly_data(user_id: UUID) -> dict | None:
             day_total = len(day_tasks)
 
             day_name = DAY_NAMES_UZ.get(day.weekday(), str(day.weekday()))
-            pct = round((day_completed / day_total * 100)) if day_total > 0 else 0
+            pct = round(day_completed / day_total * 100) if day_total > 0 else 0
             weekly_breakdown_lines.append(
                 f"{day_name}: {day_completed}/{day_total} — {pct}%"
             )
@@ -155,8 +155,8 @@ async def save_insight(
     supporting_data: dict,
 ) -> None:
     """Insight ni DB ga saqlash."""
-    from src.infrastructure.db.session import async_session_factory
     from src.infrastructure.db.models.insight import InsightModel
+    from src.infrastructure.db.session import async_session_factory
 
     async with async_session_factory() as session:
         insight = InsightModel(
@@ -188,8 +188,8 @@ def generate_weekly_insights() -> dict:
     """
     logger.info("Generating weekly insights...")
 
-    from src.config.settings import settings
     from src.application.use_cases.generate_insight import GenerateWeeklyInsightUseCase
+    from src.config.settings import settings
     from src.infrastructure.llm import ClaudeProvider
 
     if not settings.anthropic_api_key:
@@ -200,9 +200,9 @@ def generate_weekly_insights() -> dict:
     use_case = GenerateWeeklyInsightUseCase(llm_provider=provider)
 
     async def _process_all_users():
-        from src.infrastructure.db.session import async_session_factory
-        from src.infrastructure.db.models.user import UserModel
         from src.infrastructure.db.models.goal import GoalModel
+        from src.infrastructure.db.models.user import UserModel
+        from src.infrastructure.db.session import async_session_factory
 
         async with async_session_factory() as session:
             users_result = await session.execute(select(UserModel))

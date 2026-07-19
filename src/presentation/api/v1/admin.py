@@ -10,8 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.infrastructure.db.models.goal import GoalModel
 from src.infrastructure.db.models.plan import PlanModel
 from src.infrastructure.db.models.precision_engine_config import PrecisionEngineConfig
-from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
+from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.infrastructure.db.models.user import UserModel
 from src.presentation.api.dependencies import (
     CurrentUser,
@@ -88,7 +88,7 @@ async def get_precision_engine_params(
 ) -> PrecisionEngineParams:
     """Precision Engine parametrlarini DB'dan olish."""
     result = await session.execute(
-        select(PrecisionEngineConfig).where(PrecisionEngineConfig.is_active == True)
+        select(PrecisionEngineConfig).where(PrecisionEngineConfig.is_active)
     )
     config = result.scalar_one_or_none()
 
@@ -123,7 +123,7 @@ async def update_precision_engine_params(
     Har bir yangilash versiya raqamini oshiradi.
     """
     result = await session.execute(
-        select(PrecisionEngineConfig).where(PrecisionEngineConfig.is_active == True)
+        select(PrecisionEngineConfig).where(PrecisionEngineConfig.is_active)
     )
     config = result.scalar_one_or_none()
 

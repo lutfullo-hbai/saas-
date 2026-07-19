@@ -3,7 +3,7 @@
 import asyncio
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import redis.asyncio as aioredis
 from fastapi import FastAPI, Request, Response
@@ -169,7 +169,7 @@ async def health_check():
     return {
         "status": "ok",
         "service": "disipl",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -183,7 +183,7 @@ async def readiness_check():
 
     return {
         "status": "ok" if all_healthy else "degraded",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "checks": {
             "database": db_health,
             "redis": redis_health,

@@ -1,9 +1,9 @@
 """ProgressSnapshot SQLAlchemy model."""
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
-from sqlalchemy import Float, ForeignKey, JSON, String
+from sqlalchemy import JSON, Float, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -29,5 +29,5 @@ class ProgressSnapshotModel(Base):
     aggregate_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     breakdown: Mapped[dict] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
     )

@@ -1,6 +1,5 @@
 """Authentication API endpoints — email-based auth."""
 
-
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
