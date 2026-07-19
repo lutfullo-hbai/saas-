@@ -59,7 +59,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         ]:
             return await call_next(request)
 
-        # Auth endpoint'lari uchun qattiqroq rate limit (5 urinish / 15 daqiqa)
+        # Auth endpoint'lari uchun qattiqroq rate limit (30 urinish / 15 daqiqa)
         is_auth_endpoint = "/auth/" in path and any(
             p in path for p in ["/login", "/register", "/refresh"]
         )
@@ -69,7 +69,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 auth_count = await self.redis.incr(auth_key)
                 if auth_count == 1:
                     await self.redis.expire(auth_key, 900)  # 15 daqiqa
-                if auth_count > 5:
+                if auth_count > 30:
                     return JSONResponse(
                         status_code=429,
                         content={
