@@ -53,3 +53,7 @@ logs/
 # Database
 *.db
 *.sqlite3
+
+# Docker secrets (real secretlarni commit qilmang)
+secrets/*.txt
+!secrets/.gitkeep
