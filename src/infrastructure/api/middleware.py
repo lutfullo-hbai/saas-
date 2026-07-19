@@ -1,12 +1,28 @@
-"""Rate limiting middleware using Redis."""
+"""Rate limiting and request tracking middleware using Redis."""
 
 import time
+import uuid
 from collections.abc import Callable
 
 import redis.asyncio as redis
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
+
+
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    """Har bir request'ga unique ID qo'shish."""
+
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        from src.config.logging import request_id_var
+
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+        request.state.request_id = request_id
+        request_id_var.set(request_id)
+
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -34,7 +50,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         path = request.url.path
 
         # Health check, docs va static uchun rate limit yo'q
-        if path in ["/health", "/health/ready", "/docs", "/redoc", "/openapi.json", "/metrics"]:
+        if path in [
+            "/health",
+            "/health/ready",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/metrics",
+        ]:
             return await call_next(request)
 
         # Auth endpoint'lari uchun qattiqroq rate limit (5 urinish / 15 daqiqa)
