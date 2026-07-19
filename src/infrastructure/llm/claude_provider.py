@@ -73,9 +73,7 @@ class ClaudeProvider(ILLMProvider):
             output_tokens=data["usage"]["output_tokens"],
         )
 
-        logger.info(
-            f"Claude API: {tokens_used} tokens, ${cost:.4f}"
-        )
+        logger.info(f"Claude API: {tokens_used} tokens, ${cost:.4f}")
 
         return LLMResponse(
             content=content,

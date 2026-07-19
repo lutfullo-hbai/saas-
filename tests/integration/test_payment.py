@@ -22,9 +22,7 @@ class TestPaymeProvider:
 
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "result": {"transaction": 12345}
-        }
+        mock_response.json.return_value = {"result": {"transaction": 12345}}
         mock_response.raise_for_status = MagicMock()
 
         import asyncio
@@ -73,9 +71,7 @@ class TestPaymeProvider:
         provider = PaymeProvider(merchant_id="test_merchant", secret_key="test_secret")
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "result": {"state": 1}
-        }
+        mock_response.json.return_value = {"result": {"state": 1}}
         mock_response.raise_for_status = MagicMock()
 
         import asyncio

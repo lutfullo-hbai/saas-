@@ -43,11 +43,11 @@ class UserModel(Base):
     )
 
     # Relationships
-    sessions = relationship("UserSessionModel", back_populates="user", cascade="all, delete-orphan")
-
-    __table_args__ = (
-        Index("ix_users_email_active", "email", "is_active"),
+    sessions = relationship(
+        "UserSessionModel", back_populates="user", cascade="all, delete-orphan"
     )
+
+    __table_args__ = (Index("ix_users_email_active", "email", "is_active"),)
 
 
 class UserSessionModel(Base):

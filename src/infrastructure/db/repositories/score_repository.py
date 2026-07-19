@@ -44,8 +44,14 @@ class PostgresScoreRepository(IScoreRepository):
         result = await self._session.execute(
             select(ScoreEventModel)
             .join(CheckInModel, ScoreEventModel.checkin_id == CheckInModel.id)
-            .join(ScheduledTaskModel, CheckInModel.scheduled_task_id == ScheduledTaskModel.id)
-            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(
+                ScheduledTaskModel,
+                CheckInModel.scheduled_task_id == ScheduledTaskModel.id,
+            )
+            .join(
+                TaskTemplateModel,
+                TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+            )
             .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
             .join(GoalModel, GoalModel.id == PlanModel.goal_id)
             .where(GoalModel.user_id == user_id)

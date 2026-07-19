@@ -22,9 +22,7 @@ class PlanModel(Base):
         UUID(as_uuid=True), ForeignKey("goals.id"), nullable=False, index=True
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    source: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="manual"
-    )
+    source: Mapped[str] = mapped_column(String(50), nullable=False, default="manual")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
         nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)

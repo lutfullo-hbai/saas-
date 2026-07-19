@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class UserUpdate(BaseModel):
     """Foydalanuvchi ma'lumotlarini yangilash."""
+
     name: str | None = None
     timezone: str | None = None
     notification_prefs: dict | None = None
@@ -13,6 +14,7 @@ class UserUpdate(BaseModel):
 
 class UserResponse(BaseModel):
     """Foydalanuvchi javobi."""
+
     id: str
     email: str
     name: str

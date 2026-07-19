@@ -28,6 +28,7 @@ def _run_async(coro):
         loop = asyncio.get_event_loop()
         if loop.is_running():
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 future = pool.submit(asyncio.run, coro)
                 return future.result(timeout=120)
@@ -64,7 +65,10 @@ async def gather_user_weekly_data(user_id: UUID) -> dict | None:
 
         tasks_result = await session.execute(
             select(ScheduledTaskModel)
-            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(
+                TaskTemplateModel,
+                TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+            )
             .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
             .join(GoalModel, GoalModel.id == PlanModel.goal_id)
             .where(
@@ -83,8 +87,14 @@ async def gather_user_weekly_data(user_id: UUID) -> dict | None:
         score_result = await session.execute(
             select(func.avg(ScoreEventModel.computed_score))
             .join(CheckInModel, CheckInModel.id == ScoreEventModel.checkin_id)
-            .join(ScheduledTaskModel, ScheduledTaskModel.id == CheckInModel.scheduled_task_id)
-            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(
+                ScheduledTaskModel,
+                ScheduledTaskModel.id == CheckInModel.scheduled_task_id,
+            )
+            .join(
+                TaskTemplateModel,
+                TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+            )
             .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
             .join(GoalModel, GoalModel.id == PlanModel.goal_id)
             .where(
@@ -103,7 +113,10 @@ async def gather_user_weekly_data(user_id: UUID) -> dict | None:
 
             day_tasks_result = await session.execute(
                 select(ScheduledTaskModel)
-                .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+                .join(
+                    TaskTemplateModel,
+                    TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+                )
                 .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
                 .join(GoalModel, GoalModel.id == PlanModel.goal_id)
                 .where(

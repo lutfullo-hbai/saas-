@@ -9,7 +9,9 @@ from src.infrastructure.db.repositories.scheduled_task_repository import (
     PostgresScheduledTaskRepository,
 )
 from src.infrastructure.db.repositories.score_repository import PostgresScoreRepository
-from src.infrastructure.db.repositories.checkin_repository import PostgresCheckInRepository
+from src.infrastructure.db.repositories.checkin_repository import (
+    PostgresCheckInRepository,
+)
 from src.infrastructure.db.repositories.task_template_repository import (
     PostgresTaskTemplateRepository,
 )
@@ -91,7 +93,9 @@ class Container:
 
     @property
     def generate_insight_use_case(self):
-        from src.application.use_cases.generate_insight import GenerateWeeklyInsightUseCase
+        from src.application.use_cases.generate_insight import (
+            GenerateWeeklyInsightUseCase,
+        )
 
         return GenerateWeeklyInsightUseCase(self.llm_provider)
 

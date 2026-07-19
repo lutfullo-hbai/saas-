@@ -15,6 +15,7 @@ logger = get_logger(__name__)
 @dataclass
 class Referral:
     """Referral ma'lumotlari."""
+
     code: str
     referrer_id: UUID
     created_at: datetime
@@ -76,7 +77,9 @@ class ReferralService:
             return False
 
         count_result = await self._session.execute(
-            select(func.count()).select_from(ReferralModel).where(
+            select(func.count())
+            .select_from(ReferralModel)
+            .where(
                 ReferralModel.referrer_id == referral.referrer_id,
                 ReferralModel.referred_id.isnot(None),
             )
@@ -110,7 +113,9 @@ class ReferralService:
             return {"code": None, "uses": 0, "max_uses": 0}
 
         count_result = await self._session.execute(
-            select(func.count()).select_from(ReferralModel).where(
+            select(func.count())
+            .select_from(ReferralModel)
+            .where(
                 ReferralModel.referrer_id == user_id,
                 ReferralModel.referred_id.isnot(None),
             )

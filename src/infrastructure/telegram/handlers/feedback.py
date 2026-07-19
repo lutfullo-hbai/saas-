@@ -21,8 +21,7 @@ async def cmd_feedback(message: Message, state: FSMContext) -> None:
     """Feedback yuborish."""
     await state.set_state(FeedbackStates.waiting_for_type)
     await message.answer(
-        "📝 **Feedback yuborish**\n\n"
-        "Qanday turdagi feedback?",
+        "📝 **Feedback yuborish**\n\n" "Qanday turdagi feedback?",
         reply_markup=_get_feedback_type_keyboard(),
     )
 

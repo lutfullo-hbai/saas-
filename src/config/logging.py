@@ -10,9 +10,7 @@ import structlog
 request_id_var: ContextVar[str] = ContextVar("request_id", default="")
 
 
-def add_request_id(
-    logger: logging.Logger, method_name: str, event_dict: dict
-) -> dict:
+def add_request_id(logger: logging.Logger, method_name: str, event_dict: dict) -> dict:
     """Har bir log yozuviga request_id qo'shish."""
     request_id = request_id_var.get("")
     if request_id:

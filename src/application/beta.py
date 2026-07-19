@@ -14,6 +14,7 @@ logger = get_logger(__name__)
 
 class BetaStatus(Enum):
     """Beta ishtirokchisi holati."""
+
     PENDING = "pending"
     ACTIVE = "active"
     COMPLETED = "completed"
@@ -23,6 +24,7 @@ class BetaStatus(Enum):
 @dataclass
 class BetaParticipant:
     """Beta ishtirokchisi."""
+
     user_id: UUID
     username: str
     joined_at: datetime
@@ -38,7 +40,9 @@ class BetaGroupManager:
     def __init__(self, session=None):
         self._session = session
 
-    async def add_participant(self, user_id: UUID, username: str, notes: str | None = None) -> bool:
+    async def add_participant(
+        self, user_id: UUID, username: str, notes: str | None = None
+    ) -> bool:
         """Ishtirokchi qo'shish."""
         if not self._session:
             logger.warning("No DB session provided")
@@ -112,9 +116,9 @@ class BetaGroupManager:
         total = total_result.scalar() or 0
 
         active_result = await self._session.execute(
-            select(func.count()).select_from(BetaParticipantModel).where(
-                BetaParticipantModel.status == "active"
-            )
+            select(func.count())
+            .select_from(BetaParticipantModel)
+            .where(BetaParticipantModel.status == "active")
         )
         active = active_result.scalar() or 0
 

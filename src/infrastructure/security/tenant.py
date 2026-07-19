@@ -39,9 +39,7 @@ class TenantIsolation:
                 detail="Not authenticated",
             )
 
-        if not TenantIsolation.verify_user_access(
-            resource_user_id, current_user.id
-        ):
+        if not TenantIsolation.verify_user_access(resource_user_id, current_user.id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied: you can only access your own resources",
@@ -50,6 +48,7 @@ class TenantIsolation:
 
 def require_tenant_access(func: Callable) -> Callable:
     """Tenant access decorator."""
+
     @wraps(func)
     async def wrapper(*args, **kwargs):
         request = kwargs.get("request")
@@ -66,6 +65,7 @@ def require_tenant_access(func: Callable) -> Callable:
             )
 
         return await func(*args, **kwargs)
+
     return wrapper
 
 

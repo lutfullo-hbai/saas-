@@ -33,8 +33,7 @@ async def cmd_progress(message: Message) -> None:
 
         if not user:
             await message.answer(
-                "❌ Siz hali ro'yxatdan o'tmaganiz.\n"
-                "Avval /start buyrug'ini bosing."
+                "❌ Siz hali ro'yxatdan o'tmaganiz.\n" "Avval /start buyrug'ini bosing."
             )
             return
 
@@ -53,7 +52,10 @@ async def cmd_progress(message: Message) -> None:
 
         tasks_result = await session.execute(
             select(ScheduledTaskModel)
-            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(
+                TaskTemplateModel,
+                TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+            )
             .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
             .join(GoalModel, GoalModel.id == PlanModel.goal_id)
             .where(GoalModel.user_id == user_id)
@@ -66,8 +68,14 @@ async def cmd_progress(message: Message) -> None:
         score_result = await session.execute(
             select(func.avg(ScoreEventModel.computed_score))
             .join(CheckInModel, CheckInModel.id == ScoreEventModel.checkin_id)
-            .join(ScheduledTaskModel, ScheduledTaskModel.id == CheckInModel.scheduled_task_id)
-            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(
+                ScheduledTaskModel,
+                ScheduledTaskModel.id == CheckInModel.scheduled_task_id,
+            )
+            .join(
+                TaskTemplateModel,
+                TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+            )
             .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
             .join(GoalModel, GoalModel.id == PlanModel.goal_id)
             .where(GoalModel.user_id == user_id)
@@ -76,7 +84,10 @@ async def cmd_progress(message: Message) -> None:
 
         weekly_result = await session.execute(
             select(ScheduledTaskModel.status, func.count())
-            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(
+                TaskTemplateModel,
+                TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+            )
             .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
             .join(GoalModel, GoalModel.id == PlanModel.goal_id)
             .where(

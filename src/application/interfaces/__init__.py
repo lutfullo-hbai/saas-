@@ -87,7 +87,9 @@ class ITaskTemplateRepository(ABC):
         """Yangi shablon yaratish."""
 
     @abstractmethod
-    async def update(self, template_id: UUID, template_data: dict) -> TaskTemplate | None:
+    async def update(
+        self, template_id: UUID, template_data: dict
+    ) -> TaskTemplate | None:
         """Shablon ma'lumotlarini yangilash."""
 
 

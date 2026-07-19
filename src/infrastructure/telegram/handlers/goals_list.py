@@ -27,8 +27,7 @@ async def cmd_goals(message: Message) -> None:
 
         if not user:
             await message.answer(
-                "❌ Siz hali ro'yxatdan o'tmaganiz.\n"
-                "Avval /start buyrug'ini bosing."
+                "❌ Siz hali ro'yxatdan o'tmaganiz.\n" "Avval /start buyrug'ini bosing."
             )
             return
 
@@ -56,7 +55,11 @@ async def cmd_goals(message: Message) -> None:
 
     for i, goal in enumerate(goals, 1):
         icon = status_icons.get(goal.status, "❓")
-        date_str = goal.target_date.strftime("%d.%m.%Y") if goal.target_date else "sana belgilanmagan"
+        date_str = (
+            goal.target_date.strftime("%d.%m.%Y")
+            if goal.target_date
+            else "sana belgilanmagan"
+        )
         text += f"{i}. {icon} **{goal.title}**\n"
         text += f"   📅 {date_str} | 📌 {goal.status}\n\n"
 

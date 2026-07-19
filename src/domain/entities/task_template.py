@@ -23,15 +23,11 @@ class TaskTemplate:
         if not self.title:
             raise InvalidEntityError("TaskTemplate title bo'sh bo'lishi mumkin emas")
         if self.tolerance_minutes < 0:
-            raise InvalidEntityError(
-                "Tolerance_minutes manfiy bo'lishi mumkin emas"
-            )
+            raise InvalidEntityError("Tolerance_minutes manfiy bo'lishi mumkin emas")
         if not (0.0 <= self.task_weight <= 1.0):
             raise InvalidEntityError(
                 f"Task_weight 0.0-1.0 orasida bo'lishi kerak, "
                 f"hozir: {self.task_weight}"
             )
         if not self.recurrence_rule.startswith("FREQ="):
-            raise InvalidEntityError(
-                "Recurrence_rule FREQ= bilan boshlanishi kerak"
-            )
+            raise InvalidEntityError("Recurrence_rule FREQ= bilan boshlanishi kerak")

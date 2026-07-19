@@ -56,7 +56,9 @@ class PostgresTaskTemplateRepository(ITaskTemplateRepository):
         await self._session.flush()
         return template
 
-    async def update(self, template_id: UUID, template_data: dict) -> TaskTemplate | None:
+    async def update(
+        self, template_id: UUID, template_data: dict
+    ) -> TaskTemplate | None:
         result = await self._session.execute(
             select(TaskTemplateModel).where(TaskTemplateModel.id == template_id)
         )
