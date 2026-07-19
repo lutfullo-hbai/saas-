@@ -1,17 +1,30 @@
 version: "3.8"
 
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+  jwt_refresh_secret:
+    file: ./secrets/jwt_refresh_secret.txt
+
 services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-disipl}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-disipl_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       POSTGRES_DB: ${POSTGRES_DB:-disipl}
-    ports:
-      - "5434:5432"
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-disipl}"]
       interval: 10s
@@ -21,10 +34,15 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    ports:
-      - "6381:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -39,10 +57,21 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-disipl}:${POSTGRES_PASSWORD:-disipl_password}@db:5432/${POSTGRES_DB:-disipl}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-disipl}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-disipl}
       - REDIS_URL=redis://redis:6379/0
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-secret-key-change-in-production}
+      - SECRET_ENV_MODE=${SECRET_ENV_MODE:-development}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
+    secrets:
+      - db_password
+      - jwt_secret
+      - jwt_refresh_secret
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
     depends_on:
       db:
         condition: service_healthy
@@ -50,7 +79,7 @@ services:
         condition: service_healthy
     command: >
       sh -c "alembic upgrade head &&
-             uvicorn src.presentation.api.app:app --host 0.0.0.0 --port 8000 --reload"
+             uvicorn src.presentation.api.app:app --host 0.0.0.0 --port 8000"
 
   bot:
     build:
@@ -58,9 +87,14 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-disipl}:${POSTGRES_PASSWORD:-disipl_password}@db:5432/${POSTGRES_DB:-disipl}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-disipl}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-disipl}
       - REDIS_URL=redis://redis:6379/0
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
     depends_on:
       db:
         condition: service_healthy
@@ -74,9 +108,14 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-disipl}:${POSTGRES_PASSWORD:-disipl_password}@db:5432/${POSTGRES_DB:-disipl}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-disipl}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-disipl}
       - REDIS_URL=redis://redis:6379/0
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
     depends_on:
       db:
         condition: service_healthy
@@ -90,9 +129,14 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-disipl}:${POSTGRES_PASSWORD:-disipl_password}@db:5432/${POSTGRES_DB:-disipl}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-disipl}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-disipl}
       - REDIS_URL=redis://redis:6379/0
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
     depends_on:
       db:
         condition: service_healthy
@@ -109,6 +153,11 @@ services:
       - "5555:5555"
     environment:
       - REDIS_URL=redis://redis:6379/0
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
     depends_on:
       redis:
         condition: service_healthy
@@ -137,7 +186,8 @@ services:
       - "3002:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-changeme}
+      - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
