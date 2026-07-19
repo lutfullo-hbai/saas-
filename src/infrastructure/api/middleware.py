@@ -33,9 +33,31 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_ip = request.client.host if request.client else "unknown"
         path = request.url.path
 
-        # Health check va docs uchun rate limit yo'q
-        if path in ["/health", "/docs", "/openapi.json"]:
+        # Health check, docs va static uchun rate limit yo'q
+        if path in ["/health", "/health/ready", "/docs", "/redoc", "/openapi.json", "/metrics"]:
             return await call_next(request)
+
+        # Auth endpoint'lari uchun qattiqroq rate limit (5 urinish / 15 daqiqa)
+        is_auth_endpoint = "/auth/" in path and any(
+            p in path for p in ["/login", "/register", "/refresh"]
+        )
+        if is_auth_endpoint:
+            auth_key = f"auth_rate:{client_ip}"
+            try:
+                auth_count = await self.redis.incr(auth_key)
+                if auth_count == 1:
+                    await self.redis.expire(auth_key, 900)  # 15 daqiqa
+                if auth_count > 5:
+                    return JSONResponse(
+                        status_code=429,
+                        content={
+                            "detail": "Auth endpoint'larga juda ko'p so'rov. 15 daqiqadan keyin qayta urinib ko'ring.",
+                            "retry_after": 900,
+                        },
+                        headers={"Retry-After": "900"},
+                    )
+            except Exception:
+                pass
 
         # Rate limit key
         key = f"rate_limit:{client_ip}:{path}"

@@ -16,10 +16,16 @@ async def client():
         yield ac
 
 
-async def _auth(client, telegram_id="integ_test"):
+async def _auth(client, suffix="integ"):
+    """Email-based register + login."""
+    email = f"test_{suffix}@disipl.test"
+    await client.post(
+        "/api/v1/auth/register",
+        json={"email": email, "password": "Test1234!", "name": "Tester"},
+    )
     r = await client.post(
-        "/api/v1/auth/telegram",
-        json={"telegram_id": telegram_id, "name": "Tester"},
+        "/api/v1/auth/login",
+        json={"email": email, "password": "Test1234!"},
     )
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
@@ -34,25 +40,84 @@ class TestHealthAPI:
 
 class TestAuthAPI:
     @pytest.mark.asyncio
-    async def test_create_user(self, client):
+    async def test_register(self, client):
         r = await client.post(
-            "/api/v1/auth/telegram",
-            json={"telegram_id": "auth_create_001", "name": "Auth Test"},
+            "/api/v1/auth/register",
+            json={"email": "reg_test_001@disipl.test", "password": "Test1234!", "name": "Auth Test"},
+        )
+        assert r.status_code == 201
+        assert "access_token" in r.json()
+        assert "refresh_token" in r.json()
+
+    @pytest.mark.asyncio
+    async def test_register_duplicate(self, client):
+        email = "dup_test_001@disipl.test"
+        await client.post(
+            "/api/v1/auth/register",
+            json={"email": email, "password": "Test1234!", "name": "Dup"},
+        )
+        r = await client.post(
+            "/api/v1/auth/register",
+            json={"email": email, "password": "Test1234!", "name": "Dup"},
+        )
+        assert r.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_login(self, client):
+        email = "login_test_001@disipl.test"
+        await client.post(
+            "/api/v1/auth/register",
+            json={"email": email, "password": "Test1234!", "name": "Login Test"},
+        )
+        r = await client.post(
+            "/api/v1/auth/login",
+            json={"email": email, "password": "Test1234!"},
         )
         assert r.status_code == 200
         assert "access_token" in r.json()
 
     @pytest.mark.asyncio
-    async def test_idempotent_auth(self, client):
+    async def test_login_wrong_password(self, client):
+        email = "login_wrong_001@disipl.test"
         await client.post(
-            "/api/v1/auth/telegram",
-            json={"telegram_id": "auth_idem_001", "name": "Idem"},
+            "/api/v1/auth/register",
+            json={"email": email, "password": "Test1234!", "name": "Wrong"},
         )
         r = await client.post(
-            "/api/v1/auth/telegram",
-            json={"telegram_id": "auth_idem_001", "name": "Idem"},
+            "/api/v1/auth/login",
+            json={"email": email, "password": "WrongPassword!"},
+        )
+        assert r.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_refresh_token(self, client):
+        email = "refresh_test_001@disipl.test"
+        reg = await client.post(
+            "/api/v1/auth/register",
+            json={"email": email, "password": "Test1234!", "name": "Refresh"},
+        )
+        refresh_token = reg.json()["refresh_token"]
+        r = await client.post(
+            "/api/v1/auth/refresh",
+            json={"refresh_token": refresh_token},
         )
         assert r.status_code == 200
+        assert "access_token" in r.json()
+
+    @pytest.mark.asyncio
+    async def test_get_me(self, client):
+        h = await _auth(client, "me_001")
+        r = await client.get("/api/v1/auth/me", headers=h)
+        assert r.status_code == 200
+        assert "email" in r.json()
+
+    @pytest.mark.asyncio
+    async def test_invalid_token(self, client):
+        r = await client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": "Bearer invalid_token_123"},
+        )
+        assert r.status_code == 401
 
 
 class TestGoalsAPI:

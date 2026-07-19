@@ -8,15 +8,17 @@ class UserUpdate(BaseModel):
     name: str | None = None
     timezone: str | None = None
     notification_prefs: dict | None = None
-    is_admin: bool | None = None
+    role: str | None = None
 
 
 class UserResponse(BaseModel):
     """Foydalanuvchi javobi."""
     id: str
-    telegram_id: str
+    email: str
     name: str
-    is_admin: bool
+    role: str
+    is_active: bool
+    is_verified: bool
     timezone: str
     created_at: str
 

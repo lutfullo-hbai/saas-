@@ -45,8 +45,9 @@ class UserListItem(BaseModel):
     """Foydalanuvchi ro'yxati elementi."""
 
     id: str
-    telegram_id: str
+    email: str
     name: str
+    role: str
     goals_count: int
     created_at: str
 
@@ -186,8 +187,9 @@ async def list_users(
         user_list.append(
             UserListItem(
                 id=str(user.id),
-                telegram_id=user.telegram_id,
+                email=user.email,
                 name=user.name,
+                role=user.role,
                 goals_count=goals_count,
                 created_at=user.created_at.isoformat() if user.created_at else "",
             )
@@ -236,8 +238,9 @@ async def get_user_details(
 
     return {
         "id": str(user.id),
-        "telegram_id": user.telegram_id,
+        "email": user.email,
         "name": user.name,
+        "role": user.role,
         "goals_count": len(goals),
         "tasks_completed": completed_tasks,
         "created_at": user.created_at.isoformat() if user.created_at else "",

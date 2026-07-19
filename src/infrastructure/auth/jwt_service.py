@@ -9,30 +9,34 @@ from jose import JWTError, jwt
 from src.config.settings import settings
 
 
-def create_access_token(user_id: UUID, telegram_id: str) -> str:
-    """Access token yaratish — qisqa muddatli."""
+def create_access_token(user_id: UUID, email: str) -> str:
+    """Access token yaratish — qisqa muddatli (15 daqiqa)."""
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expiration_minutes)
     payload = {
         "sub": str(user_id),
-        "telegram_id": telegram_id,
+        "email": email,
         "type": "access",
         "exp": expire,
+        "iat": datetime.now(timezone.utc),
     }
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
-def create_refresh_token(user_id: UUID, telegram_id: str) -> str:
-    """Refresh token yaratish — uzoq muddatli.
+def create_refresh_token(user_id: UUID, email: str) -> str:
+    """Refresh token yaratish — uzoq muddatli (30 kun).
 
-    Refresh token database'da saqlanishi kerak.
+    Refresh token database'da sessiya sifatida saqlanadi.
+    Har bir token unique JTI (JWT ID) ga ega.
     """
+    jti = secrets.token_hex(16)
     expire = datetime.now(timezone.utc) + timedelta(days=settings.jwt_refresh_expiration_days)
     payload = {
         "sub": str(user_id),
-        "telegram_id": telegram_id,
+        "email": email,
         "type": "refresh",
-        "jti": secrets.token_hex(16),  # Unique token ID
+        "jti": jti,
         "exp": expire,
+        "iat": datetime.now(timezone.utc),
     }
     return jwt.encode(payload, settings.jwt_refresh_secret_key, algorithm=settings.jwt_algorithm)
 
@@ -48,10 +52,10 @@ def decode_access_token(token: str) -> dict | None:
         if payload.get("type") != "access":
             return None
         user_id = payload.get("sub")
-        telegram_id = payload.get("telegram_id")
-        if user_id is None or telegram_id is None:
+        email = payload.get("email")
+        if user_id is None or email is None:
             return None
-        return {"user_id": UUID(user_id), "telegram_id": telegram_id}
+        return {"user_id": UUID(user_id), "email": email}
     except JWTError:
         return None
 
@@ -67,13 +71,13 @@ def decode_refresh_token(token: str) -> dict | None:
         if payload.get("type") != "refresh":
             return None
         user_id = payload.get("sub")
-        telegram_id = payload.get("telegram_id")
+        email = payload.get("email")
         jti = payload.get("jti")
-        if user_id is None or telegram_id is None or jti is None:
+        if user_id is None or email is None or jti is None:
             return None
         return {
             "user_id": UUID(user_id),
-            "telegram_id": telegram_id,
+            "email": email,
             "jti": jti,
         }
     except JWTError:
