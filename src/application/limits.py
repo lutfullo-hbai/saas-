@@ -10,6 +10,7 @@ logger = get_logger(__name__)
 
 class SubscriptionTier(Enum):
     """Obuna darajasi."""
+
     FREE = "free"
     PRO = "pro"
 
@@ -17,6 +18,7 @@ class SubscriptionTier(Enum):
 @dataclass
 class TierLimits:
     """Har bir daraja uchun cheklovlar."""
+
     max_goals: int
     max_tasks_per_goal: int
     max_checkins_per_day: int

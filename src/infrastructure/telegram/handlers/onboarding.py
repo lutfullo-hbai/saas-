@@ -116,7 +116,9 @@ async def process_first_goal(message: Message, state: FSMContext) -> None:
     await _finish_onboarding(message, state)
 
 
-async def _finish_onboarding(message: Message | CallbackQuery, state: FSMContext) -> None:
+async def _finish_onboarding(
+    message: Message | CallbackQuery, state: FSMContext
+) -> None:
     """Onboarding yakunlash — foydalanuvchini DB ga saqlash."""
     data = await state.get_data()
     name = data.get("name", "Foydalanuvchi")

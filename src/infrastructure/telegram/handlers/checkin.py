@@ -13,7 +13,9 @@ from src.application.use_cases.process_checkin import ProcessCheckInUseCase
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
 from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.infrastructure.db.models.user import UserModel
-from src.infrastructure.db.repositories.checkin_repository import PostgresCheckInRepository
+from src.infrastructure.db.repositories.checkin_repository import (
+    PostgresCheckInRepository,
+)
 from src.infrastructure.db.repositories.score_repository import PostgresScoreRepository
 from src.infrastructure.db.repositories.scheduled_task_repository import (
     PostgresScheduledTaskRepository,
@@ -42,7 +44,10 @@ async def _get_today_tasks(user_id: str) -> list[dict]:
     async with async_session_factory() as session:
         result = await session.execute(
             select(ScheduledTaskModel)
-            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(
+                TaskTemplateModel,
+                TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+            )
             .where(
                 ScheduledTaskModel.scheduled_date == date.today(),
                 ScheduledTaskModel.status == "pending",
@@ -53,7 +58,9 @@ async def _get_today_tasks(user_id: str) -> list[dict]:
         task_list = []
         for task in all_tasks:
             template_result = await session.execute(
-                select(TaskTemplateModel).where(TaskTemplateModel.id == task.task_template_id)
+                select(TaskTemplateModel).where(
+                    TaskTemplateModel.id == task.task_template_id
+                )
             )
             template = template_result.scalar_one_or_none()
 
@@ -84,9 +91,11 @@ async def _get_today_tasks(user_id: str) -> list[dict]:
                 {
                     "id": str(task.id),
                     "title": template.title if template else "Noma'lum",
-                    "time": task.scheduled_datetime.strftime("%H:%M")
-                    if task.scheduled_datetime
-                    else "??:??",
+                    "time": (
+                        task.scheduled_datetime.strftime("%H:%M")
+                        if task.scheduled_datetime
+                        else "??:??"
+                    ),
                 }
             )
         return task_list
@@ -100,8 +109,7 @@ async def cmd_tasks(message: Message) -> None:
 
     if not user_id:
         await message.answer(
-            "❌ Siz hali ro'yxatdan o'tmaganiz.\n"
-            "Avval /start buyrug'ini bosing."
+            "❌ Siz hali ro'yxatdan o'tmaganiz.\n" "Avval /start buyrug'ini bosing."
         )
         return
 
@@ -179,8 +187,7 @@ async def handle_checkin_done(callback: CallbackQuery) -> None:
         )
     except Exception as e:
         await callback.message.edit_text(
-            f"❌ **Xatolik:** {str(e)}\n\n"
-            "Qaytadan urinib ko'ring."
+            f"❌ **Xatolik:** {str(e)}\n\n" "Qaytadan urinib ko'ring."
         )
 
     await callback.answer()

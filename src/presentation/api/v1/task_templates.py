@@ -50,7 +50,9 @@ async def list_task_templates(
     return [TaskTemplateResponse.model_validate(t) for t in templates]
 
 
-@router.post("", response_model=TaskTemplateResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=TaskTemplateResponse, status_code=status.HTTP_201_CREATED
+)
 async def add_task_template(
     plan_id: UUID,
     request: TaskTemplateCreate,

@@ -17,7 +17,9 @@ class ScoreEvent:
     computed_score: float = 0.0
     formula_version: str = "v1"
     calculation_meta: dict = field(default_factory=dict)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = field(
+        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+    )
 
     def __post_init__(self) -> None:
         if not self.formula_version:

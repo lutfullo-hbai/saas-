@@ -118,7 +118,10 @@ def check_notification_delivery(self) -> dict:
             asyncio.run(_send_telegram_alert(message))
             logger.warning("notifications_overdue", count=overdue_count)
 
-        return {"overdue": overdue_count, "checked_at": datetime.now(timezone.utc).isoformat()}
+        return {
+            "overdue": overdue_count,
+            "checked_at": datetime.now(timezone.utc).isoformat(),
+        }
 
     except Exception as e:
         logger.error("notification_check_failed", error=str(e))

@@ -30,6 +30,7 @@ def _run_async(coro):
         loop = asyncio.get_event_loop()
         if loop.is_running():
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 future = pool.submit(asyncio.run, coro)
                 return future.result(timeout=120)
@@ -148,9 +149,7 @@ def send_notifications() -> dict:
                 continue
 
             try:
-                telegram_id = _run_async(
-                    get_user_telegram_id_for_task(task["id"])
-                )
+                telegram_id = _run_async(get_user_telegram_id_for_task(task["id"]))
                 if not telegram_id:
                     logger.warning(
                         f"No telegram_id found for task {task['id']}, skipping"

@@ -31,9 +31,7 @@ async def _get_user_tier(user_id: UUID, session: AsyncSession) -> SubscriptionTi
     return SubscriptionTier.FREE
 
 
-async def _check_goal_limit(
-    user_id: UUID, session: AsyncSession
-) -> None:
+async def _check_goal_limit(user_id: UUID, session: AsyncSession) -> None:
     """Maqsad soni limitini tekshirish."""
     tier = await _get_user_tier(user_id, session)
 

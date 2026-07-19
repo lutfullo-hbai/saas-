@@ -30,8 +30,7 @@ async def cmd_refer(message: Message) -> None:
 
         if not user:
             await message.answer(
-                "❌ Siz hali ro'yxatdan o'tmaganiz.\n"
-                "Avval /start buyrug'ini bosing."
+                "❌ Siz hali ro'yxatdan o'tmaganiz.\n" "Avval /start buyrug'ini bosing."
             )
             return
 
@@ -43,6 +42,7 @@ async def cmd_refer(message: Message) -> None:
 
         if not referral:
             import secrets
+
             code = secrets.token_urlsafe(8)
             referral = ReferralModel(
                 referrer_id=user.id,
@@ -59,6 +59,7 @@ async def cmd_refer(message: Message) -> None:
 
         # Statistika
         from sqlalchemy import func
+
         count_result = await session.execute(
             select(func.count(ReferralModel.id)).where(
                 ReferralModel.referrer_id == user.id,
@@ -105,8 +106,7 @@ async def cmd_refer_stats(message: Message) -> None:
 
         if not user:
             await message.answer(
-                "❌ Siz hali ro'yxatdan o'tmaganiz.\n"
-                "Avval /start buyrug'ini bosing."
+                "❌ Siz hali ro'yxatdan o'tmaganiz.\n" "Avval /start buyrug'ini bosing."
             )
             return
 
@@ -126,6 +126,7 @@ async def cmd_refer_stats(message: Message) -> None:
 
         # Ishlatilgan sonini hisoblash
         from sqlalchemy import func
+
         count_result = await session.execute(
             select(func.count(ReferralModel.id)).where(
                 ReferralModel.referrer_id == user.id,

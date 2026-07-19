@@ -35,7 +35,11 @@ PLANS_APPROVAL = {
             "tasks": [
                 {"id": "t1", "title": "Kuniga 30 daqiqa vocabulary", "time": "09:00"},
                 {"id": "t2", "title": "Grammar exercise (15 daqiqa)", "time": "10:00"},
-                {"id": "t3", "title": "Listening practice (20 daqiqa)", "time": "18:00"},
+                {
+                    "id": "t3",
+                    "title": "Listening practice (20 daqiqa)",
+                    "time": "18:00",
+                },
                 {"id": "t4", "title": "Daily journaling (10 daqiqa)", "time": "21:00"},
             ],
         }
@@ -70,7 +74,9 @@ async def review_pending_plan(callback: CallbackQuery, state: FSMContext) -> Non
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Tasdiqlash", callback_data="plan_approve"),
+                InlineKeyboardButton(
+                    text="✅ Tasdiqlash", callback_data="plan_approve"
+                ),
                 InlineKeyboardButton(text="✏️ Tahrirlash", callback_data="plan_edit"),
             ],
             [
@@ -99,9 +105,7 @@ async def approve_plan(callback: CallbackQuery, state: FSMContext) -> None:
                 InlineKeyboardButton(
                     text="✅ Ha, tasdiqlash", callback_data="plan_confirm_approve"
                 ),
-                InlineKeyboardButton(
-                    text="🔙 Ortga", callback_data="plan_review"
-                ),
+                InlineKeyboardButton(text="🔙 Ortga", callback_data="plan_review"),
             ],
         ]
     )
@@ -155,9 +159,7 @@ async def edit_plan(callback: CallbackQuery, state: FSMContext) -> None:
                 )
             ],
             [
-                InlineKeyboardButton(
-                    text="🔙 Ortga", callback_data="plan_review"
-                ),
+                InlineKeyboardButton(text="🔙 Ortga", callback_data="plan_review"),
             ],
         ]
     )
@@ -206,8 +208,7 @@ async def reject_plan(callback: CallbackQuery, state: FSMContext) -> None:
     )
 
     await callback.message.edit_text(
-        "❌ Reja rad etildi.\n\n"
-        "Yangi reja so'rashni xohlaysizmi?",
+        "❌ Reja rad etildi.\n\n" "Yangi reja so'rashni xohlaysizmi?",
         reply_markup=keyboard,
     )
     await state.clear()

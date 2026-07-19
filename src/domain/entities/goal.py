@@ -19,13 +19,14 @@ class Goal:
     description: str = ""
     target_date: date | None = None
     status: str = "active"
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = field(
+        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+    )
 
     def __post_init__(self) -> None:
         if not self.title:
             raise InvalidEntityError("Goal title bo'sh bo'lishi mumkin emas")
         if self.status not in VALID_GOAL_STATUSES:
             raise InvalidEntityError(
-                f"Noto'g'ri status: {self.status}. "
-                f"Mavjud: {VALID_GOAL_STATUSES}"
+                f"Noto'g'ri status: {self.status}. " f"Mavjud: {VALID_GOAL_STATUSES}"
             )

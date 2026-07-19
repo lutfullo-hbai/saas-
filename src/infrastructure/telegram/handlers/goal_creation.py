@@ -178,8 +178,7 @@ async def confirm_goal_yes(callback: CallbackQuery, state: FSMContext) -> None:
         )
     except Exception as e:
         await callback.message.edit_text(
-            f"❌ **Xatolik yuz berdi:** {str(e)}\n\n"
-            "Qaytadan urinib ko'ring."
+            f"❌ **Xatolik yuz berdi:** {str(e)}\n\n" "Qaytadan urinib ko'ring."
         )
 
     await state.clear()

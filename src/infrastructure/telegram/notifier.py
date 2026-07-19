@@ -26,7 +26,10 @@ async def get_user_telegram_id_for_task(scheduled_task_id: UUID) -> str | None:
             .join(GoalModel, GoalModel.user_id == UserModel.id)
             .join(PlanModel, PlanModel.goal_id == GoalModel.id)
             .join(TaskTemplateModel, TaskTemplateModel.plan_id == PlanModel.id)
-            .join(ScheduledTaskModel, ScheduledTaskModel.task_template_id == TaskTemplateModel.id)
+            .join(
+                ScheduledTaskModel,
+                ScheduledTaskModel.task_template_id == TaskTemplateModel.id,
+            )
             .where(ScheduledTaskModel.id == scheduled_task_id)
         )
         row = result.scalar_one_or_none()
@@ -67,8 +70,6 @@ async def send_task_notification(
 async def get_user_telegram_id(user_id: UUID) -> str | None:
     """User ID dan Telegram chat_id ni olish."""
     async with async_session_factory() as session:
-        result = await session.execute(
-            select(UserModel).where(UserModel.id == user_id)
-        )
+        result = await session.execute(select(UserModel).where(UserModel.id == user_id))
         user = result.scalar_one_or_none()
         return user.telegram_id if user else None

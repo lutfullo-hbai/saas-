@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 
 class PaymentStatus(Enum):
     """To'lov holati."""
+
     PENDING = "pending"
     COMPLETED = "completed"
     FAILED = "failed"
@@ -26,6 +27,7 @@ class PaymentStatus(Enum):
 
 class SubscriptionTier(Enum):
     """Obuna darajasi."""
+
     FREE = "free"
     PRO = "pro"
 
@@ -33,6 +35,7 @@ class SubscriptionTier(Enum):
 @dataclass
 class PaymentResult:
     """To'lov natijasi."""
+
     success: bool
     transaction_id: str | None = None
     status: PaymentStatus = PaymentStatus.PENDING
@@ -43,6 +46,7 @@ class PaymentResult:
 @dataclass
 class Subscription:
     """Obuna ma'lumotlari."""
+
     user_id: int
     tier: SubscriptionTier
     started_at: datetime
@@ -283,9 +287,7 @@ class ClickProvider(PaymentProvider):
             hashlib.sha256,
         ).hexdigest()
 
-    async def _make_request(
-        self, method: str, endpoint: str, params: dict
-    ) -> dict:
+    async def _make_request(self, method: str, endpoint: str, params: dict) -> dict:
         """Click API ga so'rov yuborish."""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sign_data = f"{self.merchant_id}{timestamp}"
@@ -377,9 +379,7 @@ class ClickProvider(PaymentProvider):
     async def check_payment(self, transaction_id: str) -> PaymentResult:
         """To'lov holatini tekshirish."""
         try:
-            data = await self._make_request(
-                "GET", f"payments/{transaction_id}", {}
-            )
+            data = await self._make_request("GET", f"payments/{transaction_id}", {})
 
             if "status" in data:
                 status_val = data["status"]
@@ -524,7 +524,8 @@ class SubscriptionService:
             user_id=user_id,
             tier=tier,
             started_at=datetime.now(timezone.utc).replace(tzinfo=None),
-            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=self.PRO_DURATION_DAYS),
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None)
+            + timedelta(days=self.PRO_DURATION_DAYS),
             payment_method=payment_method,
             transaction_id=transaction_id,
             is_active=True,

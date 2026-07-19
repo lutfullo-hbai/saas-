@@ -72,9 +72,11 @@ celery_app.conf.update(
     },
 )
 
-celery_app.autodiscover_tasks([
-    "src.infrastructure.scheduler.tasks",
-    "src.infrastructure.scheduler.tasks_alerting",
-    "src.infrastructure.scheduler.tasks_backup",
-    "src.infrastructure.scheduler.tasks_insight",
-])
+celery_app.autodiscover_tasks(
+    [
+        "src.infrastructure.scheduler.tasks",
+        "src.infrastructure.scheduler.tasks_alerting",
+        "src.infrastructure.scheduler.tasks_backup",
+        "src.infrastructure.scheduler.tasks_insight",
+    ]
+)

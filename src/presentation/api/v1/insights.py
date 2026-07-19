@@ -41,7 +41,10 @@ async def get_progress(
 
     tasks_result = await session.execute(
         select(ScheduledTaskModel)
-        .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+        .join(
+            TaskTemplateModel,
+            TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+        )
         .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
         .join(GoalModel, GoalModel.id == PlanModel.goal_id)
         .where(GoalModel.user_id == user_id)
@@ -53,8 +56,13 @@ async def get_progress(
     score_result = await session.execute(
         select(func.avg(ScoreEventModel.computed_score))
         .join(CheckInModel, CheckInModel.id == ScoreEventModel.checkin_id)
-        .join(ScheduledTaskModel, ScheduledTaskModel.id == CheckInModel.scheduled_task_id)
-        .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+        .join(
+            ScheduledTaskModel, ScheduledTaskModel.id == CheckInModel.scheduled_task_id
+        )
+        .join(
+            TaskTemplateModel,
+            TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+        )
         .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
         .join(GoalModel, GoalModel.id == PlanModel.goal_id)
         .where(GoalModel.user_id == user_id)
@@ -92,7 +100,10 @@ async def get_weekly_progress(
         day = week_start + timedelta(days=i)
         tasks_result = await session.execute(
             select(ScheduledTaskModel)
-            .join(TaskTemplateModel, TaskTemplateModel.id == ScheduledTaskModel.task_template_id)
+            .join(
+                TaskTemplateModel,
+                TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
+            )
             .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
             .join(GoalModel, GoalModel.id == PlanModel.goal_id)
             .where(
@@ -107,18 +118,23 @@ async def get_weekly_progress(
         score_result = await session.execute(
             select(func.avg(ScoreEventModel.computed_score))
             .join(CheckInModel, CheckInModel.id == ScoreEventModel.checkin_id)
-            .join(ScheduledTaskModel, ScheduledTaskModel.id == CheckInModel.scheduled_task_id)
+            .join(
+                ScheduledTaskModel,
+                ScheduledTaskModel.id == CheckInModel.scheduled_task_id,
+            )
             .where(ScheduledTaskModel.scheduled_date == day)
         )
         avg_score = score_result.scalar() or 0.0
 
         day_names = ["Dush", "Sesh", "Chor", "Pay", "Jum", "Shan", "Yak"]
-        days.append({
-            "day": day_names[i],
-            "date": day.isoformat(),
-            "completed": completed,
-            "total": total,
-            "score": round(float(avg_score), 2) if avg_score else 0,
-        })
+        days.append(
+            {
+                "day": day_names[i],
+                "date": day.isoformat(),
+                "completed": completed,
+                "total": total,
+                "score": round(float(avg_score), 2) if avg_score else 0,
+            }
+        )
 
     return days
