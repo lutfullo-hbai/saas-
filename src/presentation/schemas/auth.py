@@ -6,9 +6,11 @@ from pydantic import BaseModel, EmailStr, field_validator
 
 class RegisterRequest(BaseModel):
     """Ro'yxatdan o'tish so'rovi."""
+
     email: str
     password: str
     name: str
+    telegram_id: int | None = None
 
     @field_validator("email")
     @classmethod
@@ -38,6 +40,7 @@ class RegisterRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     """Kirish so'rovi."""
+
     email: str
     password: str
 
@@ -49,6 +52,7 @@ class LoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     """JWT token javobi."""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -57,21 +61,25 @@ class TokenResponse(BaseModel):
 
 class RefreshTokenRequest(BaseModel):
     """Refresh token so'rovi."""
+
     refresh_token: str
 
 
 class LogoutRequest(BaseModel):
     """Tizimdan chiqish so'rovi."""
+
     refresh_token: str
 
 
 class LogoutAllRequest(BaseModel):
     """Barcha sessiyalardan chiqish so'rovi."""
+
     pass
 
 
 class PasswordChangeRequest(BaseModel):
     """Parol o'zgartirish so'rovi."""
+
     current_password: str
     new_password: str
 
@@ -85,6 +93,7 @@ class PasswordChangeRequest(BaseModel):
 
 class UserResponse(BaseModel):
     """Foydalanuvchi javobi."""
+
     id: str
     email: str
     name: str
@@ -99,6 +108,7 @@ class UserResponse(BaseModel):
 
 class SessionResponse(BaseModel):
     """Sessiya javobi."""
+
     id: str
     device_info: str | None
     ip_address: str | None

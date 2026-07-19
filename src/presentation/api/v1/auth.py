@@ -29,7 +29,9 @@ from src.presentation.schemas.auth import (
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
+)
 async def register(
     request: RegisterRequest,
     req: Request,
@@ -45,6 +47,7 @@ async def register(
             password=request.password,
             name=request.name,
             ip_address=ip_address,
+            telegram_id=request.telegram_id,
         )
         await session.commit()
         return TokenResponse(**result)
