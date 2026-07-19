@@ -20,6 +20,7 @@ logger = get_logger(__name__)
 
 class AuthError(Exception):
     """Auth xatosi."""
+
     pass
 
 
@@ -30,7 +31,12 @@ class AuthService:
         self.session = session
 
     async def register(
-        self, email: str, password: str, name: str, ip_address: str | None = None
+        self,
+        email: str,
+        password: str,
+        name: str,
+        ip_address: str | None = None,
+        telegram_id: int | None = None,
     ) -> dict:
         """Ro'yxatdan o'tish."""
         # Email bandligini tekshirish
@@ -44,6 +50,7 @@ class AuthService:
             password_hash=hash_password(password),
             name=name,
             is_verified=False,
+            telegram_id=telegram_id,
         )
         self.session.add(user)
         await self.session.flush()
@@ -51,7 +58,7 @@ class AuthService:
         logger.info("user_registered", user_id=str(user.id), email=email)
 
         # Token yaratish
-        return await self._create_tokens(user, ip_address)
+        return await self._create_tokens(user, ip_address, telegram_id)
 
     async def login(
         self, email: str, password: str, ip_address: str | None = None
@@ -79,11 +86,9 @@ class AuthService:
 
         logger.info("user_logged_in", user_id=str(user.id), email=email)
 
-        return await self._create_tokens(user, ip_address)
+        return await self._create_tokens(user, ip_address, user.telegram_id)
 
-    async def refresh(
-        self, refresh_token: str, ip_address: str | None = None
-    ) -> dict:
+    async def refresh(self, refresh_token: str, ip_address: str | None = None) -> dict:
         """Refresh token rotation."""
         payload = decode_refresh_token(refresh_token)
         if payload is None:
@@ -119,7 +124,7 @@ class AuthService:
         )
 
         # Yangi tokenlar
-        return await self._create_tokens(user, ip_address)
+        return await self._create_tokens(user, ip_address, user.telegram_id)
 
     async def logout(self, refresh_token: str) -> None:
         """Bitta sessiyadan chiqish."""
@@ -171,10 +176,15 @@ class AuthService:
             for s in sessions
         ]
 
-    async def _create_tokens(self, user: UserModel, ip_address: str | None = None) -> dict:
+    async def _create_tokens(
+        self,
+        user: UserModel,
+        ip_address: str | None = None,
+        telegram_id: int | None = None,
+    ) -> dict:
         """Tokenlar yaratish va sessiya saqlash."""
-        access_token = create_access_token(user.id, user.email)
-        refresh_token = create_refresh_token(user.id, user.email)
+        access_token = create_access_token(user.id, user.email, telegram_id)
+        refresh_token = create_refresh_token(user.id, user.email, telegram_id)
 
         # Refresh token payload'ini decode qilish
         payload = decode_refresh_token(refresh_token)

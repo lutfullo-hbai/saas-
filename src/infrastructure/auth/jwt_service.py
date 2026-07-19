@@ -9,9 +9,13 @@ from jose import JWTError, jwt
 from src.config.settings import settings
 
 
-def create_access_token(user_id: UUID, email: str) -> str:
+def create_access_token(
+    user_id: UUID, email: str, telegram_id: int | None = None
+) -> str:
     """Access token yaratish — qisqa muddatli (15 daqiqa)."""
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expiration_minutes)
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.jwt_expiration_minutes
+    )
     payload = {
         "sub": str(user_id),
         "email": email,
@@ -19,17 +23,25 @@ def create_access_token(user_id: UUID, email: str) -> str:
         "exp": expire,
         "iat": datetime.now(timezone.utc),
     }
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    if telegram_id is not None:
+        payload["telegram_id"] = telegram_id
+    return jwt.encode(
+        payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+    )
 
 
-def create_refresh_token(user_id: UUID, email: str) -> str:
+def create_refresh_token(
+    user_id: UUID, email: str, telegram_id: int | None = None
+) -> str:
     """Refresh token yaratish — uzoq muddatli (30 kun).
 
     Refresh token database'da sessiya sifatida saqlanadi.
     Har bir token unique JTI (JWT ID) ga ega.
     """
     jti = secrets.token_hex(16)
-    expire = datetime.now(timezone.utc) + timedelta(days=settings.jwt_refresh_expiration_days)
+    expire = datetime.now(timezone.utc) + timedelta(
+        days=settings.jwt_refresh_expiration_days
+    )
     payload = {
         "sub": str(user_id),
         "email": email,
@@ -38,7 +50,11 @@ def create_refresh_token(user_id: UUID, email: str) -> str:
         "exp": expire,
         "iat": datetime.now(timezone.utc),
     }
-    return jwt.encode(payload, settings.jwt_refresh_secret_key, algorithm=settings.jwt_algorithm)
+    if telegram_id is not None:
+        payload["telegram_id"] = telegram_id
+    return jwt.encode(
+        payload, settings.jwt_refresh_secret_key, algorithm=settings.jwt_algorithm
+    )
 
 
 def decode_access_token(token: str) -> dict | None:
@@ -55,7 +71,10 @@ def decode_access_token(token: str) -> dict | None:
         email = payload.get("email")
         if user_id is None or email is None:
             return None
-        return {"user_id": UUID(user_id), "email": email}
+        result = {"user_id": UUID(user_id), "email": email}
+        if "telegram_id" in payload:
+            result["telegram_id"] = payload["telegram_id"]
+        return result
     except JWTError:
         return None
 
@@ -75,10 +94,13 @@ def decode_refresh_token(token: str) -> dict | None:
         jti = payload.get("jti")
         if user_id is None or email is None or jti is None:
             return None
-        return {
+        result = {
             "user_id": UUID(user_id),
             "email": email,
             "jti": jti,
         }
+        if "telegram_id" in payload:
+            result["telegram_id"] = payload["telegram_id"]
+        return result
     except JWTError:
         return None

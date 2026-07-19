@@ -22,6 +22,7 @@ class CurrentUser:
 
     user_id: UUID
     email: str
+    telegram_id: int | None = None
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -45,6 +46,7 @@ async def get_current_user(
     return CurrentUser(
         user_id=payload["user_id"],
         email=payload["email"],
+        telegram_id=payload.get("telegram_id"),
     )
 
 
