@@ -7,17 +7,24 @@ __pycache__/
 env/
 venv/
 .venv/
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
+coverage.xml
 
 # Type checking
 .mypy_cache/
@@ -25,6 +32,8 @@ htmlcov/
 
 # Environment
 .env
+.env.local
+.env.production
 
 # Docker
 docker-compose.override.yml
@@ -35,3 +44,16 @@ Thumbs.db
 
 # Node (frontend uchun)
 node_modules/
+frontend/dist/
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite3
+
+# Docker secrets (real secretlarni commit qilmang)
+secrets/*.txt
+!secrets/.gitkeep

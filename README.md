@@ -1,4 +1,4 @@
-# Disipl — AI-Powered Personal Discipline & Goal Execution System
+    # Disipl — AI-Powered Personal Discipline & Goal Execution System
 
 > "Sizga yo'l ko'rsatuvchi emas, sizni **nazorat qiluvchi** shaxsiy kotib."
 

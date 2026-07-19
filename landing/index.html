@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disipl — AI-Powered Personal Discipline & Goal Execution</title>
+    <meta name="description" content="Disipl — AI powered shaxsiy discipline tizimi. Maqsadlaringizni belgilang, AI reja tuzib bersin, progressni kuzatib boring. Telegram bot orqali.">
+    <meta name="keywords" content="discipline, goal setting, AI, productivity, Telegram bot, maqsad, reja, AI planner">
+    <meta property="og:title" content="Disipl — AI-Powered Personal Discipline">
+    <meta property="og:description" content="Sizga yo'l ko'rsatuvchi emas, sizni nazorat qiluvchi shaxsiy kotib.">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#0ea5e9">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc',
+                            400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1',
+                            800: '#075985', 900: '#0c4a6e',
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .fade-in { animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .stat-number { background: linear-gradient(135deg, #0ea5e9, #0369a1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Hero Section -->
+    <header class="gradient-bg text-white">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold">Disipl</div>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="#features" class="hover:text-gray-200">Imkoniyatlar</a>
+                <a href="#pricing" class="hover:text-gray-200">Narxlar</a>
+                <a href="https://t.me/disipl_bot" class="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                    Botni boshlash
+                </a>
+            </div>
+            <a href="https://t.me/disipl_bot" class="md:hidden bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100">
+                Boshlash
+            </a>
+        </nav>
+        
+        <div class="container mx-auto px-6 py-20 text-center">
+            <h1 class="text-5xl font-extrabold mb-6">
+                O'z <span class="text-yellow-300">maqsadlaringizni</span> bajarishga majbur qiling
+            </h1>
+            <p class="text-xl mb-8 text-primary-100 max-w-2xl mx-auto">
+                Disipl — AI powered shaxsiy discipline tizimi. Maqsadlaringizni belgilang, 
+                AI reja tuzib bersin, progressni kuzatib boring.
+            </p>
+            <div class="space-x-4">
+                <a href="https://t.me/disipl_bot" class="bg-yellow-400 text-gray-900 px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 inline-block">
+                    🚀 Hoziroq boshlash — Bepul
+                </a>
+                <a href="#demo" class="border-2 border-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-primary-600 inline-block">
+                    Demo ko'rish
+                </a>
+            </div>
+            <p class="mt-6 text-primary-200">Kredit karta talab qilinmaydi • 5 daqiqada tayyor</p>
+        </div>
+    </header>
+
+    <!-- Pain Points -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center mb-4">Siz ham bularni boshdan kechirganmisiz?</h2>
+            <p class="text-center text-gray-500 mb-12 max-w-xl mx-auto">Ko'pchilik shunday muammolar bilan yashaydi. Disipl shuning uchun yaratildi.</p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center p-8 rounded-2xl bg-red-50 border border-red-100">
+                    <div class="text-5xl mb-4">😫</div>
+                    <h3 class="text-xl font-semibold mb-2 text-gray-900">Maqsad qo'yasiz, unutasiz</h3>
+                    <p class="text-gray-600">Yil boshida reja tuzasiz, fevralda unutasiz. Har yili takror.</p>
+                </div>
+                <div class="text-center p-8 rounded-2xl bg-orange-50 border border-orange-100">
+                    <div class="text-5xl mb-4">📱</div>
+                    <h3 class="text-xl font-semibold mb-2 text-gray-900">App'lar ishlamaydi</h3>
+                    <p class="text-gray-600">Todo listlar, tracker'lar — barchasi bir haftadan keyin chetga.</p>
+                </div>
+                <div class="text-center p-8 rounded-2xl bg-purple-50 border border-purple-100">
+                    <div class="text-5xl mb-4">🤷</div>
+                    <h3 class="text-xl font-semibold mb-2 text-gray-900">Nima qilishni bilmaysiz</h3>
+                    <p class="text-gray-600">Qaysi vazifani qachon bajarishni AI aytib bersa — zo'r bo'lardi.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="py-16 bg-gray-900 text-white">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <div class="text-4xl font-extrabold stat-number mb-2">3 daqiqa</div>
+                    <p class="text-gray-400">O'rnatish vaqti</p>
+                </div>
+                <div>
+                    <div class="text-4xl font-extrabold stat-number mb-2">AI</div>
+                    <p class="text-gray-400">Shaxsiy reja tuzuvchi</p>
+                </div>
+                <div>
+                    <div class="text-4xl font-extrabold stat-number mb-2">24/7</div>
+                    <p class="text-gray-400">Doimiy nazorat</p>
+                </div>
+                <div>
+                    <div class="text-4xl font-extrabold stat-number mb-2">100%</div>
+                    <p class="text-gray-400">Maxfiylik kafolati</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center mb-4">Disipl nima qiladi?</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                Oddiy Telegram bot orqali — qo'shimcha app yuklab olmasdan
+            </p>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-2xl shadow-sm card-hover transition-all">
+                    <div class="text-4xl mb-4">🤖</div>
+                    <h3 class="text-xl font-semibold mb-2">AI Reja Tuzadi</h3>
+                    <p class="text-gray-600">Maqsadingizni tavsiflang — AI sizga kunlik reja tuzib beradi. Qachon, nima qilishni aytadi.</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-sm card-hover transition-all">
+                    <div class="text-4xl mb-4">⏰</div>
+                    <h3 class="text-xl font-semibold mb-2">Eslatma Yuboradi</h3>
+                    <p class="text-gray-600">Vaqtingiz kelganda Telegram orqali eslatma olasiz. "Bajardim" yoki "Bajarmadim" tugmasini bosing.</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-sm card-hover transition-all">
+                    <div class="text-4xl mb-4">📊</div>
+                    <h3 class="text-xl font-semibold mb-2">Progress Kuzatadi</h3>
+                    <p class="text-gray-600">Haftalik, oylik statistika. Qaysi kunlar zaif ekanligingizni ko'rasiz.</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-sm card-hover transition-all">
+                    <div class="text-4xl mb-4">🧠</div>
+                    <h3 class="text-xl font-semibold mb-2">AI Tahlil Qiladi</h3>
+                    <p class="text-gray-600">Hafta oxirida AI sabablarni tahlil qiladi va aniq savol beradi.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center mb-4">Qanday ishlaydi?</h2>
+            <p class="text-center text-gray-500 mb-12 max-w-xl mx-auto">3 qadamda boshlang — hech qanday murakkab sozlash talab qilinmaydi</p>
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="text-center relative">
+                    <div class="w-16 h-16 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
+                    <h3 class="font-semibold mb-2">Botni boshlang</h3>
+                    <p class="text-sm text-gray-600">Telegram'da /start bosing</p>
+                </div>
+                <div class="text-center relative">
+                    <div class="w-16 h-16 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
+                    <h3 class="font-semibold mb-2">Maqsad qo'ying</h3>
+                    <p class="text-sm text-gray-600">Nima erishmoqchi ekanligingizni yozing</p>
+                </div>
+                <div class="text-center relative">
+                    <div class="w-16 h-16 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">3</div>
+                    <h3 class="font-semibold mb-2">Reja oling</h3>
+                    <p class="text-sm text-gray-600">AI sizga kunlik reja tuzib beradi</p>
+                </div>
+                <div class="text-center relative">
+                    <div class="w-16 h-16 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">4</div>
+                    <h3 class="font-semibold mb-2">Bajaring</h3>
+                    <p class="text-sm text-gray-600">Vazifalarni bajaring, progressni kuzating</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Precision Engine -->
+    <section class="py-20 bg-gradient-to-br from-primary-50 to-blue-50">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <span class="bg-primary-100 text-primary-700 text-sm font-semibold px-3 py-1 rounded-full">Texnologiya</span>
+                    <h2 class="text-3xl font-bold mt-4 mb-6">Precision Engine — Aniq ball tizimi</h2>
+                    <p class="text-gray-600 mb-6">
+                        Oddiy "bajarildi/bajarilmadi" emas. Disipl har bir check-in uchun aniq ball hisoblaydi:
+                    </p>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-3">
+                            <span class="text-green-500 mt-1">✓</span>
+                            <span><strong>Vaqtida</strong> — to'liq ball (1.0)</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-yellow-500 mt-1">✓</span>
+                            <span><strong>Biroz kechikkan</strong> — toleransiya doirasida (0.8)</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-orange-500 mt-1">✓</span>
+                            <span><strong>Juda kechikkan</strong> — eksponensial kamayish</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-red-500 mt-1">✓</span>
+                            <span><strong>Bajarmagan</strong> — avtomatik 0 ball</span>
+                        </li>
+                    </ul>
+                    <p class="text-gray-500 text-sm italic">
+                        Formula: <code class="bg-gray-100 px-2 py-1 rounded">score = e^(-λ × delay) × weight</code>
+                    </p>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h3 class="font-semibold text-gray-900 mb-4">Haftalik natija</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Dushanba</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-32 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
+                                </div>
+                                <span class="text-sm font-semibold text-green-600">100%</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Seshanba</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-32 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 80%"></div>
+                                </div>
+                                <span class="text-sm font-semibold text-yellow-600">80%</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Chorshanba</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-32 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 95%"></div>
+                                </div>
+                                <span class="text-sm font-semibold text-green-600">95%</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Payshanba</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-32 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-red-500 h-2 rounded-full" style="width: 0%"></div>
+                                </div>
+                                <span class="text-sm font-semibold text-red-600">0%</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Juma</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-32 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
+                                </div>
+                                <span class="text-sm font-semibold text-green-600">100%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t flex justify-between items-center">
+                        <span class="font-semibold text-gray-900">Haftalik ortacha</span>
+                        <span class="text-2xl font-bold text-primary-600">75%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center mb-4">Narxlar</h2>
+            <p class="text-center text-gray-600 mb-12">Boshlash uchun bepul, cheksiz o'sish uchun Pro</p>
+            
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <!-- Free Tier -->
+                <div class="bg-white p-8 rounded-2xl shadow-sm border-2 border-gray-200">
+                    <h3 class="text-xl font-bold mb-4">Bepul</h3>
+                    <div class="text-4xl font-bold mb-6">$0 <span class="text-lg text-gray-500">/ umrbod</span></div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> 3 ta maqsad</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Kunlik 10 ta check-in</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> AI reja (kuniga 3 marta)</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Haftalik 1 ta insight</li>
+                    </ul>
+                    <a href="https://t.me/disipl_bot" class="block text-center border-2 border-primary-600 text-primary-600 py-3 rounded-lg font-semibold hover:bg-primary-50">
+                        Boshlash
+                    </a>
+                </div>
+                
+                <!-- Pro Tier -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg border-2 border-primary-600 relative">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                        Tavsiya etiladi
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Pro</h3>
+                    <div class="text-4xl font-bold mb-6">$9.99 <span class="text-lg text-gray-500">/ oy</span></div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> 50 ta maqsad</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Kunlik 100 ta check-in</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Cheksiz AI reja</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Haftalik 52 ta insight</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Afzallikli qo'llab-quvvatlash</li>
+                    </ul>
+                    <a href="https://t.me/disipl_bot?start=pro" class="block text-center bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700">
+                        Pro'ga o'tish
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-24 gradient-bg text-white text-center">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl md:text-5xl font-extrabold mb-6">Hoziroq boshlang</h2>
+            <p class="text-xl mb-4 text-primary-100 max-w-lg mx-auto">
+                Birinchi maqsadingizni 3 daqiqada qo'ying. AI reja tuzib bersin.
+            </p>
+            <p class="text-primary-200 mb-8 text-sm">Kredit karta talab qilinmaydi • Bepul boshlang</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="https://t.me/disipl_bot" class="bg-yellow-400 text-gray-900 px-10 py-4 rounded-xl font-bold text-lg hover:bg-yellow-300 inline-flex items-center gap-2 shadow-lg">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+                    Telegram'da boshlash
+                </a>
+                <a href="#features" class="border-2 border-white px-8 py-4 rounded-xl font-semibold hover:bg-white hover:text-primary-600 transition-colors">
+                    Batafsil o'qish
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <div class="text-2xl font-bold text-white mb-4">Disipl</div>
+                    <p class="text-gray-500 text-sm">AI-Powered Personal Discipline System. Maqsadlaringizni bajarishga majbur qiling.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-4">Havolalar</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#features" class="hover:text-white transition-colors">Imkoniyatlar</a></li>
+                        <li><a href="#pricing" class="hover:text-white transition-colors">Narxlar</a></li>
+                        <li><a href="https://t.me/disipl_bot" class="hover:text-white transition-colors">Telegram Bot</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-4">Qo'llab-quvvatlash</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="https://t.me/disipl_support" class="hover:text-white transition-colors">Telegram Qo'llab-quvvatlash</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Maxfiylik siyosati</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Foydalanish shartlari</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm">
+                <p>&copy; 2026 Disipl. Barcha huquqlar himoyalangan.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
