@@ -7,8 +7,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+COPY README.md .
 COPY pyproject.toml .
-RUN pip install --no-cache-dir -e .
+COPY src/ src/
+RUN pip install --no-cache-dir .
 
 FROM python:3.12-slim
 

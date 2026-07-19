@@ -14,10 +14,8 @@ export default function Settings() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (user?.timezone) {
-      setTimezone(user.timezone)
-    }
-  }, [user])
+    setTimezone(timezone)
+  }, [])
 
   const handleSave = async () => {
     setSaving(true)

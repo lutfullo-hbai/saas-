@@ -1,10 +1,11 @@
 """User limits and tier management."""
 
-import logging
 from dataclasses import dataclass
 from enum import Enum
 
-logger = logging.getLogger(__name__)
+from src.config.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class SubscriptionTier(Enum):

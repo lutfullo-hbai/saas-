@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "changeme"
     jwt_algorithm: str = "HS256"
     jwt_expiration_minutes: int = 30
+    jwt_refresh_secret_key: str = "changeme-refresh"
+    jwt_refresh_expiration_days: int = 30
 
     # LLM
     llm_provider: str = "claude"
@@ -33,6 +35,9 @@ class Settings(BaseSettings):
 
     # Payment default provider
     payment_provider: str = "payme"  # "payme" yoki "click"
+
+    # Encryption
+    encryption_key: str = ""
 
     # App
     app_env: str = "development"

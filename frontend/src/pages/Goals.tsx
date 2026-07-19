@@ -12,7 +12,7 @@ interface Goal {
 }
 
 export default function Goals() {
-  const { user } = useAuth()
+  useAuth()
   const [goals, setGoals] = useState<Goal[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)

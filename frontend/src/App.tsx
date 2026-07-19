@@ -6,6 +6,7 @@ import TaskTemplates from './pages/TaskTemplates'
 import CheckIn from './pages/CheckIn'
 import Progress from './pages/Progress'
 import Settings from './pages/Settings'
+import Insights from './pages/Insights'
 import Login from './pages/Login'
 import { useAuth } from './hooks/useAuth'
 
@@ -31,6 +32,7 @@ function App() {
           <Route path="/goals/:goalId/plans/:planId/templates" element={isAuthenticated ? <TaskTemplates /> : <Navigate to="/login" />} />
           <Route path="/checkin" element={isAuthenticated ? <CheckIn /> : <Navigate to="/login" />} />
           <Route path="/progress" element={isAuthenticated ? <Progress /> : <Navigate to="/login" />} />
+          <Route path="/insights" element={isAuthenticated ? <Insights /> : <Navigate to="/login" />} />
           <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
         </Routes>
       </div>

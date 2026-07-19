@@ -1,15 +1,15 @@
 """Celery tasks for scheduler and notifications."""
 
 import asyncio
-import logging
 from datetime import datetime, timedelta
 from uuid import UUID
 
 from dateutil.rrule import rrulestr
 
+from src.config.logging import get_logger
 from src.infrastructure.scheduler.celery_app import celery_app
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def get_next_occurrences(

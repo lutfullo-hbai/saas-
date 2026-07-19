@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +21,7 @@ class CurrentUser:
     """Hozirgi foydalanuvchi ma'lumotlari."""
 
     user_id: UUID
-    telegram_id: str
+    email: str
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -44,7 +44,7 @@ async def get_current_user(
         )
     return CurrentUser(
         user_id=payload["user_id"],
-        telegram_id=payload["telegram_id"],
+        email=payload["email"],
     )
 
 
@@ -57,9 +57,17 @@ async def get_current_admin_user(
         select(UserModel).where(UserModel.id == current_user.user_id)
     )
     user = result.scalar_one_or_none()
-    if not user or not user.is_admin:
+    if not user or user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin huquqi talab qilinadi",
         )
     return current_user
+
+
+def get_client_ip(request: Request) -> str | None:
+    """Client IP manzilini olish."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else None

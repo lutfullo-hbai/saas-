@@ -42,5 +42,39 @@ celery_app.conf.update(
             "schedule": 604800.0,
             "args": (),
         },
+        # Alerting tasks
+        "check-notification-delivery": {
+            "task": "src.infrastructure.scheduler.tasks_alerting.check_notification_delivery",
+            "schedule": 300.0,  # Har 5 daqiqada
+            "args": (),
+        },
+        "check-service-health": {
+            "task": "src.infrastructure.scheduler.tasks_alerting.check_service_health",
+            "schedule": 300.0,  # Har 5 daqiqada
+            "args": (),
+        },
+        "check-pending-tasks-backlog": {
+            "task": "src.infrastructure.scheduler.tasks_alerting.check_pending_tasks_backlog",
+            "schedule": 600.0,  # Har 10 daqiqada
+            "args": (),
+        },
+        # Backup tasks
+        "daily-backup": {
+            "task": "src.infrastructure.scheduler.tasks_backup.run_daily_backup",
+            "schedule": 86400.0,  # Har kuni (tunda)
+            "args": (),
+        },
+        "verify-backup-weekly": {
+            "task": "src.infrastructure.scheduler.tasks_backup.verify_backup",
+            "schedule": 604800.0,  # Haftada bir marta
+            "args": (),
+        },
     },
 )
+
+celery_app.autodiscover_tasks([
+    "src.infrastructure.scheduler.tasks",
+    "src.infrastructure.scheduler.tasks_alerting",
+    "src.infrastructure.scheduler.tasks_backup",
+    "src.infrastructure.scheduler.tasks_insight",
+])

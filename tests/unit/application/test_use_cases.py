@@ -1,6 +1,6 @@
 """Use case unit testlari."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -20,7 +20,7 @@ from src.domain.exceptions import AlreadyCheckedInError
 class TestCreateGoalUseCase:
     """CreateGoalUseCase testlari."""
 
-    def test_creates_goal_with_title(self):
+    async def test_creates_goal_with_title(self):
         mock_repo = AsyncMock()
         use_case = CreateGoalUseCase(mock_repo)
         user_id = uuid4()
@@ -28,17 +28,13 @@ class TestCreateGoalUseCase:
         goal = Goal(user_id=user_id, title="Test maqsad")
         mock_repo.create.return_value = goal
 
-        import asyncio
-
-        result = asyncio.run(
-            use_case.execute(user_id=user_id, title="Test maqsad")
-        )
+        result = await use_case.execute(user_id=user_id, title="Test maqsad")
 
         assert result.title == "Test maqsad"
         assert result.user_id == user_id
         mock_repo.create.assert_called_once()
 
-    def test_creates_goal_with_description(self):
+    async def test_creates_goal_with_description(self):
         mock_repo = AsyncMock()
         use_case = CreateGoalUseCase(mock_repo)
         user_id = uuid4()
@@ -46,10 +42,8 @@ class TestCreateGoalUseCase:
         goal = Goal(user_id=user_id, title="Test", description="Tavsif")
         mock_repo.create.return_value = goal
 
-        import asyncio
-
-        result = asyncio.run(
-            use_case.execute(user_id=user_id, title="Test", description="Tavsif")
+        result = await use_case.execute(
+            user_id=user_id, title="Test", description="Tavsif"
         )
 
         assert result.description == "Tavsif"
@@ -58,7 +52,7 @@ class TestCreateGoalUseCase:
 class TestCreatePlanManuallyUseCase:
     """CreatePlanManuallyUseCase testlari."""
 
-    def test_creates_plan_for_goal(self):
+    async def test_creates_plan_for_goal(self):
         mock_repo = AsyncMock()
         use_case = CreatePlanManuallyUseCase(mock_repo)
         goal_id = uuid4()
@@ -66,15 +60,13 @@ class TestCreatePlanManuallyUseCase:
         plan = Plan(goal_id=goal_id, source="manual")
         mock_repo.create.return_value = plan
 
-        import asyncio
-
-        result = asyncio.run(use_case.execute(goal_id=goal_id))
+        result = await use_case.execute(goal_id=goal_id)
 
         assert result.goal_id == goal_id
         assert result.source == "manual"
         mock_repo.create.assert_called_once()
 
-    def test_creates_ai_plan(self):
+    async def test_creates_ai_plan(self):
         mock_repo = AsyncMock()
         use_case = CreatePlanManuallyUseCase(mock_repo)
         goal_id = uuid4()
@@ -82,11 +74,7 @@ class TestCreatePlanManuallyUseCase:
         plan = Plan(goal_id=goal_id, source="ai")
         mock_repo.create.return_value = plan
 
-        import asyncio
-
-        result = asyncio.run(
-            use_case.execute(goal_id=goal_id, source="ai")
-        )
+        result = await use_case.execute(goal_id=goal_id, source="ai")
 
         assert result.source == "ai"
 
@@ -94,7 +82,7 @@ class TestCreatePlanManuallyUseCase:
 class TestAddTaskTemplateUseCase:
     """AddTaskTemplateUseCase testlari."""
 
-    def test_adds_template_to_plan(self):
+    async def test_adds_template_to_plan(self):
         mock_repo = AsyncMock()
         use_case = AddTaskTemplateUseCase(mock_repo)
         plan_id = uuid4()
@@ -107,15 +95,11 @@ class TestAddTaskTemplateUseCase:
         )
         mock_repo.create.return_value = template
 
-        import asyncio
-
-        result = asyncio.run(
-            use_case.execute(
-                plan_id=plan_id,
-                title="50 ta so'z yodlash",
-                tolerance_minutes=15,
-                task_weight=0.8,
-            )
+        result = await use_case.execute(
+            plan_id=plan_id,
+            title="50 ta so'z yodlash",
+            tolerance_minutes=15,
+            task_weight=0.8,
         )
 
         assert result.title == "50 ta so'z yodlash"
@@ -126,7 +110,7 @@ class TestAddTaskTemplateUseCase:
 class TestProcessCheckInUseCase:
     """ProcessCheckInUseCase testlari."""
 
-    def test_processes_checkinSuccessfully(self):
+    async def test_processes_checkinSuccessfully(self):
         mock_task_repo = AsyncMock()
         mock_score_repo = AsyncMock()
         mock_checkin_repo = AsyncMock()
@@ -149,8 +133,6 @@ class TestProcessCheckInUseCase:
             id=task_id, status="completed"
         )
 
-        from src.domain.entities.task_template import TaskTemplate
-
         template = TaskTemplate(
             id=template_id,
             title="Test task",
@@ -159,13 +141,9 @@ class TestProcessCheckInUseCase:
         )
         mock_template_repo.get_by_id.return_value = template
 
-        import asyncio
-
-        checkin, score = asyncio.run(
-            use_case.execute(
-                scheduled_task_id=task_id,
-                checkin_time=datetime(2026, 1, 1, 14, 32),
-            )
+        checkin, score = await use_case.execute(
+            scheduled_task_id=task_id,
+            checkin_time=datetime(2026, 1, 1, 14, 32),
         )
 
         assert checkin.scheduled_task_id == task_id
@@ -174,7 +152,7 @@ class TestProcessCheckInUseCase:
         mock_checkin_repo.create.assert_called_once()
         mock_score_repo.create.assert_called_once()
 
-    def test_rejects_already_completed_task(self):
+    async def test_rejects_already_completed_task(self):
         mock_task_repo = AsyncMock()
         mock_score_repo = AsyncMock()
         mock_checkin_repo = AsyncMock()
@@ -191,11 +169,7 @@ class TestProcessCheckInUseCase:
         mock_task_repo.get_by_id.return_value = task
 
         with pytest.raises(AlreadyCheckedInError):
-            import asyncio
-
-            asyncio.run(
-                use_case.execute(
-                    scheduled_task_id=task.id,
-                    checkin_time=datetime.utcnow(),
-                )
+            await use_case.execute(
+                scheduled_task_id=task.id,
+                checkin_time=datetime.now(timezone.utc),
             )

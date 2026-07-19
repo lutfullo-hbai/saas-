@@ -1,15 +1,15 @@
 """Weekly insight generation Celery task — real DB ma'lumotlari bilan."""
 
 import asyncio
-import logging
 from datetime import datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import func, select
 
+from src.config.logging import get_logger
 from src.infrastructure.scheduler.celery_app import celery_app
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 DAY_NAMES_UZ = {
     0: "Dushanba",

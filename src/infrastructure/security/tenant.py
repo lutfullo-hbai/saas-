@@ -1,12 +1,13 @@
 """Multi-tenant security audit and isolation."""
 
-import logging
 from functools import wraps
 from typing import Any, Callable
 
 from fastapi import Request, HTTPException, status
 
-logger = logging.getLogger(__name__)
+from src.config.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class TenantIsolation:

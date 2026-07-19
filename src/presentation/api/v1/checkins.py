@@ -1,6 +1,6 @@
 """Check-ins API endpoints."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -69,7 +69,7 @@ async def create_checkin(
 
     checkin, score_event = await use_case.execute(
         scheduled_task_id=request.scheduled_task_id,
-        checkin_time=datetime.utcnow(),
+        checkin_time=datetime.now(timezone.utc).replace(tzinfo=None),
         method=request.method,
         user_note=request.user_note,
     )
