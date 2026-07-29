@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from src.domain.exceptions import InvalidEntityError
+from src.utils.datetime_utils import utc_now
 
 VALID_PLAN_SOURCES = {"manual", "ai"}
 
@@ -18,9 +19,7 @@ class Plan:
     version: int = 1
     source: str = "manual"  # "manual" yoki "ai"
     is_active: bool = True
-    created_at: datetime = field(
-        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
-    )
+    created_at: datetime = field(default_factory=utc_now)
 
     def __post_init__(self) -> None:
         if self.version < 1:

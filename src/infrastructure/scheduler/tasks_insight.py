@@ -2,6 +2,8 @@
 
 import asyncio
 from datetime import datetime, timedelta
+
+from src.utils.datetime_utils import utc_now
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -53,7 +55,7 @@ async def gather_user_weekly_data(user_id: UUID) -> dict | None:
     from src.infrastructure.db.session import async_session_factory
 
     async with async_session_factory() as session:
-        week_ago = datetime.now() - timedelta(days=7)
+        week_ago = utc_now() - timedelta(days=7)
 
         goals_result = await session.execute(
             select(GoalModel).where(GoalModel.user_id == user_id)
@@ -107,7 +109,7 @@ async def gather_user_weekly_data(user_id: UUID) -> dict | None:
 
         weekly_breakdown_lines = []
         for day_offset in range(7):
-            day = (datetime.now() - timedelta(days=6 - day_offset)).date()
+            day = (utc_now() - timedelta(days=6 - day_offset)).date()
             day_start = datetime.combine(day, datetime.min.time())
             day_end = datetime.combine(day, datetime.max.time())
 

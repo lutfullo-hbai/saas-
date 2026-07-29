@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.infrastructure.db.models.base import Base
+from src.utils.datetime_utils import utc_now
 
 
 class PlanModel(Base):
@@ -24,6 +25,4 @@ class PlanModel(Base):
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     source: Mapped[str] = mapped_column(String(50), nullable=False, default="manual")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
-    )
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=utc_now)

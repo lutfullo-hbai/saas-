@@ -1,6 +1,6 @@
 """Check-in handler with inline keyboard buttons."""
 
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from aiogram import Router
@@ -23,6 +23,7 @@ from src.infrastructure.db.repositories.score_repository import PostgresScoreRep
 from src.infrastructure.db.repositories.task_template_repository import (
     PostgresTaskTemplateRepository,
 )
+from src.utils.datetime_utils import utc_now
 from src.infrastructure.db.session import async_session_factory
 
 router = Router()
@@ -169,7 +170,7 @@ async def handle_checkin_done(callback: CallbackQuery) -> None:
 
             checkin, score_event = await use_case.execute(
                 scheduled_task_id=task_uuid,
-                checkin_time=datetime.now(UTC).replace(tzinfo=None),
+                checkin_time=utc_now(),
                 method="telegram",
                 user_note="",
             )
@@ -181,7 +182,7 @@ async def handle_checkin_done(callback: CallbackQuery) -> None:
         await callback.message.edit_text(
             f"✅ **Vazifa bajarildi!**\n\n"
             f"🎯 Ball: +{score}\n"
-            f"⏰ Vaqt: {datetime.now().strftime('%H:%M')}\n\n"
+            f"⏰ Vaqt: {utc_now().strftime('%H:%M')}\n\n"
             f"Ajoyib! Davom eting!"
         )
     except Exception as e:

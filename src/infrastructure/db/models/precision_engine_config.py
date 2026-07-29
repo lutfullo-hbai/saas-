@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.infrastructure.db.models.base import Base
+from src.utils.datetime_utils import utc_now
 
 
 class PrecisionEngineConfig(Base):
@@ -52,11 +53,11 @@ class PrecisionEngineConfig(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=lambda: datetime.now(UTC).replace(tzinfo=None),
+        default=utc_now,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=lambda: datetime.now(UTC).replace(tzinfo=None),
-        onupdate=lambda: datetime.now(UTC).replace(tzinfo=None),
+        default=utc_now,
+        onupdate=utc_now,
     )

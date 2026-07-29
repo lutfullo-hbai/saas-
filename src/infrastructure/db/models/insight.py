@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.infrastructure.db.models.base import Base
+from src.utils.datetime_utils import utc_now
 
 
 class InsightModel(Base):
@@ -27,6 +28,4 @@ class InsightModel(Base):
     insight_type: Mapped[str] = mapped_column(String(100), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     supporting_data: Mapped[dict] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
-    )
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=utc_now)

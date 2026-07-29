@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.infrastructure.db.models.base import Base
+from src.utils.datetime_utils import utc_now
 
 
 class ScoreEventModel(Base):
@@ -30,6 +31,4 @@ class ScoreEventModel(Base):
         String(50), nullable=False, default="v1"
     )
     calculation_meta: Mapped[dict] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
-    )
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=utc_now)

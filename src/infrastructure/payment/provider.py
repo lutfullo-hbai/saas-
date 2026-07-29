@@ -11,6 +11,7 @@ import httpx
 
 from src.config.logging import get_logger
 from src.infrastructure.db.models.subscription import SubscriptionModel
+from src.utils.datetime_utils import utc_now
 
 logger = get_logger(__name__)
 
@@ -88,7 +89,7 @@ class PaymeProvider(PaymentProvider):
 
     def _generate_auth_header(self, method: str) -> str:
         """Payme uchun auth header generatsiya qilish."""
-        timestamp = str(int(datetime.now().timestamp()))
+        timestamp = str(int(datetime.now(UTC).timestamp()))
         data = f"{self.merchant_id}:{self.secret_key}:{timestamp}"
         auth_token = hashlib.sha256(data.encode()).hexdigest()
         return f"{self.merchant_id}:{auth_token}:{timestamp}"
@@ -288,7 +289,7 @@ class ClickProvider(PaymentProvider):
 
     async def _make_request(self, method: str, endpoint: str, params: dict) -> dict:
         """Click API ga so'rov yuborish."""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
         sign_data = f"{self.merchant_id}{timestamp}"
         signature = self._generate_signature(sign_data)
 
@@ -496,7 +497,7 @@ class SubscriptionService:
         return Subscription(
             user_id=user_id,
             tier=SubscriptionTier.FREE,
-            started_at=datetime.now(),
+            started_at=utc_now(),
         )
 
     async def _save_subscription(
@@ -522,8 +523,8 @@ class SubscriptionService:
         subscription = SubscriptionModel(
             user_id=user_id,
             tier=tier,
-            started_at=datetime.now(UTC).replace(tzinfo=None),
-            expires_at=datetime.now(UTC).replace(tzinfo=None)
+            started_at=utc_now(),
+            expires_at=utc_now()
             + timedelta(days=self.PRO_DURATION_DAYS),
             payment_method=payment_method,
             transaction_id=transaction_id,
@@ -544,7 +545,7 @@ class SubscriptionService:
         )
         sub = result.scalar_one_or_none()
 
-        if sub and sub.expires_at and sub.expires_at > datetime.now(UTC):
+        if sub and sub.expires_at and sub.expires_at > utc_now():
             return Subscription(
                 user_id=user_id,
                 tier=SubscriptionTier(sub.tier),
@@ -556,5 +557,5 @@ class SubscriptionService:
         return Subscription(
             user_id=user_id,
             tier=SubscriptionTier.FREE,
-            started_at=datetime.now(),
+            started_at=utc_now(),
         )
