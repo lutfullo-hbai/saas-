@@ -22,6 +22,7 @@ from src.infrastructure.db.repositories.task_template_repository import (
 from src.presentation.api.dependencies import CurrentUser, get_current_user, get_db
 from src.presentation.schemas.checkin import CheckInCreate, CheckInResponse
 from src.presentation.schemas.score import ScoreEventResponse
+from src.utils.datetime_utils import utc_now
 
 router = APIRouter(prefix="/checkins", tags=["Check-ins"])
 
@@ -81,7 +82,7 @@ async def create_checkin(
 
     checkin, score_event = await use_case.execute(
         scheduled_task_id=request.scheduled_task_id,
-        checkin_time=datetime.now(UTC).replace(tzinfo=None),
+        checkin_time=utc_now(),
         method=request.method,
         user_note=request.user_note,
     )

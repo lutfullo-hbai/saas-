@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.infrastructure.db.models.base import Base
+from src.utils.datetime_utils import utc_now
 
 
 class UserModel(Base):
@@ -30,9 +31,7 @@ class UserModel(Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     timezone: Mapped[str] = mapped_column(String(50), nullable=False, default="UTC")
     notification_prefs: Mapped[dict | None] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
-    )
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=utc_now)
     updated_at: Mapped[datetime | None] = mapped_column(nullable=True)
     last_login_at: Mapped[datetime | None] = mapped_column(nullable=True)
     last_login_ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
@@ -68,12 +67,8 @@ class UserSessionModel(Base):
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
     user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
-    )
-    last_used_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
-    )
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=utc_now)
+    last_used_at: Mapped[datetime] = mapped_column(nullable=False, default=utc_now)
     expires_at: Mapped[datetime] = mapped_column(nullable=False)
 
     # Relationship
