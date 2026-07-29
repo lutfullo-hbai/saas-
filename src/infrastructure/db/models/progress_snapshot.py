@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.infrastructure.db.models.base import Base
+from src.utils.datetime_utils import utc_now
 
 
 class ProgressSnapshotModel(Base):
@@ -28,6 +29,4 @@ class ProgressSnapshotModel(Base):
     )
     aggregate_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     breakdown: Mapped[dict] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(UTC).replace(tzinfo=None)
-    )
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=utc_now)
