@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.use_cases.process_checkin import ProcessCheckInUseCase
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
+from src.infrastructure.db.models.goal import GoalModel
+from src.infrastructure.db.models.plan import PlanModel
 from src.infrastructure.db.models.task_template import TaskTemplateModel
 from src.infrastructure.db.repositories.checkin_repository import (
     PostgresCheckInRepository,
@@ -39,7 +41,10 @@ async def get_today_checkins(
             TaskTemplateModel,
             TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
         )
+        .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
+        .join(GoalModel, GoalModel.id == PlanModel.goal_id)
         .where(ScheduledTaskModel.scheduled_date == date.today())
+        .where(GoalModel.user_id == current_user.id)
     )
     tasks = result.scalars().all()
 
@@ -78,6 +83,29 @@ async def create_checkin(
     score_repo = PostgresScoreRepository(session)
     checkin_repo = PostgresCheckInRepository(session)
     template_repo = PostgresTaskTemplateRepository(session)
+    task = await task_repo.get_by_id(request.scheduled_task_id)
+    if task is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Vazifa topilmadi")
+
+    template = await template_repo.get_by_id(task.task_template_id)
+    if template is None:
+        raise HTTPException(status_code=404, detail="Vazifa shabloni topilmadi")
+
+    plan_check = await session.execute(
+        select(PlanModel).where(PlanModel.id == template.plan_id)
+    )
+    plan = plan_check.scalar_one_or_none()
+    if plan is None:
+        raise HTTPException(status_code=404, detail="Reja topilmadi")
+
+    goal_check = await session.execute(
+        select(GoalModel).where(GoalModel.id == plan.goal_id)
+    )
+    goal = goal_check.scalar_one_or_none()
+    if goal is None or goal.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Bu vazifa sizga tegishli emas")
+
     use_case = ProcessCheckInUseCase(task_repo, score_repo, checkin_repo, template_repo)
 
     checkin, score_event = await use_case.execute(

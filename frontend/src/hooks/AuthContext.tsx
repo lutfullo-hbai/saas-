@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setState({
         isAuthenticated: true,
         isLoading: false,
-        user: JSON.parse(user),
+        user: (() => { try { return JSON.parse(user) } catch { return null } })(),
         token,
       })
     } else {

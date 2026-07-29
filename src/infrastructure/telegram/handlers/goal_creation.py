@@ -132,7 +132,7 @@ async def _get_or_create_user(telegram_id: str, name: str) -> UUID:
         )
         user = result.scalar_one_or_none()
         if user is None:
-            user = UserModel(telegram_id=telegram_id, name=name)
+            user = UserModel(telegram_id=telegram_id, name=name, email=f"tg_{telegram_id}@placeholder.local")
             session.add(user)
             await session.commit()
             await session.refresh(user)

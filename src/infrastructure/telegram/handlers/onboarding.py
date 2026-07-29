@@ -138,6 +138,7 @@ async def _finish_onboarding(
             user = UserModel(
                 telegram_id=telegram_id,
                 name=name,
+                email=f"tg_{telegram_id}@placeholder.local",
                 timezone="UTC",
             )
             session.add(user)

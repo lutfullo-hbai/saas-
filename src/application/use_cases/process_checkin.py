@@ -44,15 +44,18 @@ class ProcessCheckInUseCase:
         if task.status != "pending":
             raise AlreadyCheckedInError()
 
-        delta_minutes = (checkin_time - task.scheduled_datetime).total_seconds() / 60
-
         template = await self._template_repo.get_by_id(task.task_template_id)
         tolerance_minutes = template.tolerance_minutes if template else 10
         task_weight = template.task_weight if template else 1.0
 
+        scheduled_minutes = (
+            task.scheduled_datetime.hour * 60 + task.scheduled_datetime.minute
+        )
+        checkin_minutes = checkin_time.hour * 60 + checkin_time.minute
+
         score = calculate_score(
-            scheduled_time_minutes=0,
-            checkin_time_minutes=delta_minutes,
+            scheduled_time_minutes=scheduled_minutes,
+            checkin_time_minutes=checkin_minutes,
             tolerance_minutes=tolerance_minutes,
             task_weight=task_weight,
         )
@@ -69,7 +72,7 @@ class ProcessCheckInUseCase:
 
         score_event = ScoreEvent(
             checkin_id=checkin.id,
-            raw_delta_minutes=delta_minutes,
+            raw_delta_minutes=checkin_minutes - scheduled_minutes,
             computed_score=score,
             formula_version="v1",
             calculation_meta={

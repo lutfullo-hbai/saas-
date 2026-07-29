@@ -80,7 +80,7 @@ class AuthService:
 
         logger.info("user_registered", user_id=str(user.id), email=email)
 
-        return await self._create_tokens(user, ip_address, telegram_id)
+        return await self._createtokens(user, ip_address, telegram_id)
 
     async def login(
         self, email: str, password: str, ip_address: str | None = None
@@ -103,7 +103,7 @@ class AuthService:
 
         logger.info("user_logged_in", user_id=str(user.id), email=email)
 
-        return await self._create_tokens(user, ip_address, user.telegram_id)
+        return await self._createtokens(user, ip_address, user.telegram_id)
 
     async def refresh(self, refresh_token: str, ip_address: str | None = None) -> dict:
         """Refresh token rotation."""

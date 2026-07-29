@@ -1,7 +1,7 @@
 """TimeWindow value object."""
 
 from dataclasses import dataclass
-from datetime import datetime, time
+from datetime import UTC, datetime, time
 
 
 @dataclass(frozen=True)
@@ -28,6 +28,7 @@ class TimeWindow:
 
     def duration_minutes(self) -> float:
         """Oralikning davomiyligini daqiqada qaytaradi."""
-        start_dt = datetime.combine(datetime.today(), self.start)
-        end_dt = datetime.combine(datetime.today(), self.end)
+        today = datetime.now(UTC).date()
+        start_dt = datetime.combine(today, self.start)
+        end_dt = datetime.combine(today, self.end)
         return (end_dt - start_dt).total_seconds() / 60

@@ -16,8 +16,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-disipl}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       POSTGRES_DB: ${POSTGRES_DB:-disipl}
-    expose:
-      - "5432"
+    ports:
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     deploy:
