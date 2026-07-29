@@ -1,6 +1,8 @@
 """Auth service — register, login, refresh, logout."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
+
+from src.utils.datetime_utils import utc_now
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -80,7 +82,7 @@ class AuthService:
             raise AuthError("Hisob faol emas")
 
         # Last login yangilash
-        user.last_login_at = datetime.now(UTC).replace(tzinfo=None)
+        user.last_login_at = utc_now()
         user.last_login_ip = ip_address
         await self.session.flush()
 
@@ -103,7 +105,7 @@ class AuthService:
             raise AuthError("Sessiya topilmadi yoki bekor qilingan")
 
         # Token muddati tugaganini tekshirish
-        if session.expires_at < datetime.now(UTC).replace(tzinfo=None):
+        if session.expires_at < utc_now():
             session.is_active = False
             await self.session.flush()
             raise AuthError("Sessiya muddati tugagan")
@@ -197,7 +199,7 @@ class AuthService:
             refresh_token_jti=payload["jti"],
             ip_address=ip_address,
             is_active=True,
-            expires_at=datetime.now(UTC).replace(tzinfo=None) + timedelta(days=30),
+            expires_at=utc_now() + timedelta(days=30),
         )
         self.session.add(session)
         await self.session.flush()
