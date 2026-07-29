@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../api/client'
 
 interface Insight {
@@ -32,7 +33,7 @@ export default function Insights() {
   useEffect(() => {
     const fetchInsights = async () => {
       try {
-        const response = await api.get('/v1/insights', {
+        const response = await api.get('/insights', {
           params: selectedType !== 'all' ? { type: selectedType } : {},
         })
         setInsights(response.data)
@@ -70,9 +71,9 @@ export default function Insights() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">AI Insight'lar</h1>
-            <a href="/" className="text-primary-600 hover:text-primary-700">
+            <Link to="/" className="text-primary-600 hover:text-primary-700">
               Dashboard
-            </a>
+            </Link>
           </div>
         </div>
       </header>

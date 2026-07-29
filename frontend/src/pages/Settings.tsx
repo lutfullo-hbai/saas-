@@ -14,7 +14,8 @@ export default function Settings() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    setTimezone(timezone)
+    const saved = localStorage.getItem('timezone')
+    if (saved) setTimezone(saved)
   }, [])
 
   const handleSave = async () => {

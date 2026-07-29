@@ -35,15 +35,17 @@ export default function Dashboard() {
     fetchProgress()
   }, [user])
 
-  const weeklyData = [
-    { day: 'Dush', score: progress ? Math.round(progress.avg_score * 100) : 0 },
-    { day: 'Sesh', score: progress ? Math.round(progress.avg_score * 80) : 0 },
-    { day: 'Chor', score: progress ? Math.round(progress.avg_score * 100) : 0 },
-    { day: 'Pay', score: progress ? Math.round(progress.avg_score * 60) : 0 },
-    { day: 'Jum', score: progress ? Math.round(progress.avg_score * 90) : 0 },
-    { day: 'Shan', score: 0 },
-    { day: 'Yak', score: 0 },
-  ]
+  const weeklyData = progress
+    ? [
+        { day: 'Dush', score: Math.round(progress.avg_score * 100) },
+        { day: 'Sesh', score: 0 },
+        { day: 'Chor', score: 0 },
+        { day: 'Pay', score: 0 },
+        { day: 'Jum', score: 0 },
+        { day: 'Shan', score: 0 },
+        { day: 'Yak', score: 0 },
+      ]
+    : []
 
   if (loading) {
     return (

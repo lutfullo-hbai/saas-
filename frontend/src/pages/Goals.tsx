@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
 import api from '../api/client'
 
 interface Goal {
@@ -12,7 +11,6 @@ interface Goal {
 }
 
 export default function Goals() {
-  useAuth()
   const [goals, setGoals] = useState<Goal[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)

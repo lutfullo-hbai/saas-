@@ -8,7 +8,7 @@ import Progress from './pages/Progress'
 import Settings from './pages/Settings'
 import Insights from './pages/Insights'
 import Login from './pages/Login'
-import { useAuth } from './hooks/useAuth'
+import { AuthProvider, useAuth } from './hooks/AuthContext'
 
 function App() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -34,10 +34,17 @@ function App() {
           <Route path="/progress" element={isAuthenticated ? <Progress /> : <Navigate to="/login" />} />
           <Route path="/insights" element={isAuthenticated ? <Insights /> : <Navigate to="/login" />} />
           <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
     </Router>
   )
 }
 
-export default App
+export default function AppWrapper() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  )
+}

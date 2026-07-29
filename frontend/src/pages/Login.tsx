@@ -10,7 +10,7 @@ declare global {
           origin: string
           request_access: string
           size: string
-          onAuth: (user: any) => void
+          onAuth: (user: { id: string | number; first_name?: string; username?: string }) => void
         }) => void
       }
     }
@@ -31,7 +31,7 @@ export default function Login() {
           origin: window.location.origin,
           request_access: 'write',
           size: 'large',
-          onAuth: async (user) => {
+          onAuth: async (user: { id: string | number; first_name?: string; username?: string }) => {
             try {
               setIsLoading(true)
               const response = await fetch('/api/auth/telegram', {
