@@ -17,6 +17,7 @@ from src.infrastructure.db.repositories.scheduled_task_repository import (
 from src.infrastructure.db.repositories.score_repository import PostgresScoreRepository
 from src.infrastructure.db.repositories.user_repository import PostgresUserRepository
 from src.infrastructure.db.session import async_session_factory
+from src.utils.datetime_utils import utc_now
 
 logger = get_logger(__name__)
 
@@ -138,7 +139,7 @@ async def mark_notification_sent(task_id: UUID) -> None:
         )
         task = result.scalar_one_or_none()
         if task:
-            task.notification_sent_at = datetime.now(UTC).replace(tzinfo=None)
+            task.notification_sent_at = utc_now()
             await session.commit()
             logger.info(f"Marking notification sent for task {task_id}")
 
@@ -189,7 +190,7 @@ async def create_missed_score_event(
     async with async_session_factory() as session:
         checkin = CheckInModel(
             scheduled_task_id=scheduled_task_id,
-            checkin_time=datetime.now(UTC).replace(tzinfo=None),
+            checkin_time=utc_now(),
             method="auto_missed",
             user_note="",
         )
