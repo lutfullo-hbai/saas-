@@ -5,7 +5,6 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from src.domain.exceptions import InvalidEntityError
-from src.utils.datetime_utils import utc_now
 
 VALID_CHECKIN_METHODS = {"telegram", "web", "api"}
 
@@ -16,10 +15,14 @@ class CheckIn:
 
     id: UUID = field(default_factory=uuid4)
     scheduled_task_id: UUID = field(default_factory=uuid4)
-    checkin_time: datetime = field(default_factory=utc_now)
+    checkin_time: datetime = field(
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )
     method: str = "telegram"
     user_note: str = ""
-    created_at: datetime = field(default_factory=utc_now)
+    created_at: datetime = field(
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )
 
     def __post_init__(self) -> None:
         if self.method not in VALID_CHECKIN_METHODS:
