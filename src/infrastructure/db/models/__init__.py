@@ -7,6 +7,7 @@ from src.infrastructure.db.models.feedback import FeedbackModel
 from src.infrastructure.db.models.goal import GoalModel
 from src.infrastructure.db.models.insight import InsightModel
 from src.infrastructure.db.models.plan import PlanModel
+from src.infrastructure.db.models.precision_engine_config import PrecisionEngineConfig
 from src.infrastructure.db.models.progress_snapshot import ProgressSnapshotModel
 from src.infrastructure.db.models.referral import ReferralModel
 from src.infrastructure.db.models.scheduled_task import ScheduledTaskModel
@@ -23,6 +24,7 @@ __all__ = [
     "GoalModel",
     "InsightModel",
     "PlanModel",
+    "PrecisionEngineConfig",
     "ProgressSnapshotModel",
     "ReferralModel",
     "ScheduledTaskModel",
