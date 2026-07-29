@@ -1,7 +1,9 @@
 """Auth service implementation — infrastructure layer."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from uuid import UUID
+
+from src.utils.datetime_utils import utc_now
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,7 +74,7 @@ class AuthService:
         if not user.is_active:
             raise AuthError("Hisob faol emas")
 
-        user.last_login_at = datetime.now(UTC).replace(tzinfo=None)
+        user.last_login_at = utc_now()
         user.last_login_ip = ip_address
         await self.session.flush()
 
@@ -93,7 +95,7 @@ class AuthService:
         if session is None or not session.is_active:
             raise AuthError("Sessiya topilmadi yoki bekor qilingan")
 
-        if session.expires_at < datetime.now(UTC).replace(tzinfo=None):
+        if session.expires_at < utc_now():
             session.is_active = False
             await self.session.flush()
             raise AuthError("Sessiya muddati tugagan")
@@ -182,7 +184,7 @@ class AuthService:
             refresh_token_jti=payload["jti"],
             ip_address=ip_address,
             is_active=True,
-            expires_at=datetime.now(UTC).replace(tzinfo=None) + timedelta(days=30),
+            expires_at=utc_now() + timedelta(days=30),
         )
         self.session.add(session)
         await self.session.flush()
