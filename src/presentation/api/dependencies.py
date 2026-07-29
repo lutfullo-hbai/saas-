@@ -6,11 +6,9 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.infrastructure.auth.jwt_service import decode_access_token
-from src.infrastructure.db.models.user import UserModel
+from src.infrastructure.auth.auth_service import AuthService
 from src.infrastructure.db.session import get_db_session
 
 security = HTTPBearer(auto_error=False)
@@ -42,7 +40,7 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = credentials.credentials
-    payload = decode_access_token(token)
+    payload = AuthService.validate_access_token(token)
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -61,11 +59,8 @@ async def get_current_admin_user(
     session: AsyncSession = Depends(get_db),
 ) -> CurrentUser:
     """Hozirgi foydalanuvchi admin ekanligini tekshirish."""
-    result = await session.execute(
-        select(UserModel).where(UserModel.id == current_user.user_id)
-    )
-    user = result.scalar_one_or_none()
-    if not user or user.role != "admin":
+    auth_service = AuthService(session)
+    if not await auth_service.is_admin(current_user.user_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin huquqi talab qilinadi",

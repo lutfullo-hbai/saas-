@@ -32,6 +32,29 @@ class AuthService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    @staticmethod
+    def validate_access_token(token: str) -> dict | None:
+        """Access tokenni validate qilish va payload'ni qaytarish.
+
+        Returns payload dict yoki None (agar token yaroqsiz bo'lsa).
+        """
+        from src.infrastructure.auth.jwt_service import decode_access_token
+
+        return decode_access_token(token)
+
+    @staticmethod
+    def validate_token(token: str) -> dict | None:
+        """Alias for validate_access_token."""
+        return AuthService.validate_access_token(token)
+
+    async def is_admin(self, user_id: UUID) -> bool:
+        """Foydalanuvchi admin ekanligini tekshirish."""
+        result = await self.session.execute(
+            select(UserModel).where(UserModel.id == user_id)
+        )
+        user = result.scalar_one_or_none()
+        return user is not None and user.role == "admin"
+
     async def register(
         self,
         email: str,

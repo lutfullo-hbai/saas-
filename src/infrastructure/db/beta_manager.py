@@ -4,7 +4,7 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 
-from src.application.beta import BetaParticipant, BetaStatus
+from src.domain.entities.beta import BetaParticipant, BetaStatus
 from src.config.logging import get_logger
 from src.infrastructure.db.models.beta_participant import BetaParticipantModel
 
