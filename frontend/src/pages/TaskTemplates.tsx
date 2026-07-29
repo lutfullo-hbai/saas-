@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import api from '../api/client'
+import Layout from '../components/Layout'
 
 interface TaskTemplate {
   id: string
@@ -68,27 +69,18 @@ export default function TaskTemplates() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Link to={`/goals/${goalId}/plans`} className="text-gray-500 hover:text-gray-700">
-                ← Orqaga
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-900">Vazifa shablonlari</h1>
-            </div>
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700"
-            >
-              + Yangi shablon
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Layout
+      title="Vazifa shablonlari"
+      backTo={`/goals/${goalId}/plans`}
+      headerRight={
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700"
+        >
+          + Yangi shablon
+        </button>
+      }
+    >
         {showForm && (
           <form onSubmit={handleCreateTemplate} className="bg-white rounded-xl shadow-sm p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Yangi vazifa shabloni</h2>
@@ -206,7 +198,6 @@ export default function TaskTemplates() {
             ))
           )}
         </div>
-      </main>
-    </div>
+    </Layout>
   )
 }

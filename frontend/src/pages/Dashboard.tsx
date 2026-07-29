@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useAuth } from '../hooks/useAuth'
 import api from '../api/client'
+import Layout from '../components/Layout'
 
 interface ProgressData {
   total_goals: number
@@ -13,7 +14,7 @@ interface ProgressData {
 }
 
 export default function Dashboard() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [progress, setProgress] = useState<ProgressData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -56,25 +57,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Disipl</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-gray-600">{user?.first_name}</span>
-              <button
-                onClick={logout}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                Chiqish
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Layout title="Disipl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="text-sm text-gray-500 mb-1">Umumiy ball</div>
@@ -139,7 +122,6 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </Layout>
   )
 }

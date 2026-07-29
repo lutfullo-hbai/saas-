@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import api from '../api/client'
+import Layout from '../components/Layout'
 
 interface ScheduledTask {
   id: string
@@ -60,21 +60,7 @@ export default function CheckIn() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Link to="/" className="text-gray-500 hover:text-gray-700">
-                ← Orqaga
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-900">Bugungi vazifalar</h1>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Layout title="Bugungi vazifalar" backTo="/">
         <div className="space-y-4">
           {tasks.length === 0 ? (
             <div className="bg-white rounded-xl shadow-sm p-8 text-center">
@@ -141,7 +127,6 @@ export default function CheckIn() {
             ))
           )}
         </div>
-      </main>
-    </div>
+    </Layout>
   )
 }

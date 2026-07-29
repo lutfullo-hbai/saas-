@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import api from '../api/client'
+import Layout from '../components/Layout'
 
 interface Insight {
   id: string
@@ -66,19 +66,7 @@ export default function Insights() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">AI Insight'lar</h1>
-            <Link to="/" className="text-primary-600 hover:text-primary-700">
-              Dashboard
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Layout title="AI Insight'lar">
         {/* Filter */}
         <div className="flex gap-2 mb-6">
           {[
@@ -153,7 +141,6 @@ export default function Insights() {
             ))}
           </div>
         )}
-      </main>
-    </div>
+    </Layout>
   )
 }

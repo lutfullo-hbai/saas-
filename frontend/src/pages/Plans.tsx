@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import api from '../api/client'
+import Layout from '../components/Layout'
 
 interface Plan {
   id: string
@@ -53,21 +54,7 @@ export default function Plans() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Link to="/goals" className="text-gray-500 hover:text-gray-700">
-                ← Orqaga
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-900">Rejalar</h1>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Layout title="Rejalar" backTo="/goals">
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => handleCreatePlan('manual')}
@@ -133,7 +120,6 @@ export default function Plans() {
             ))
           )}
         </div>
-      </main>
-    </div>
+    </Layout>
   )
 }
