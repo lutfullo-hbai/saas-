@@ -40,52 +40,29 @@ async def _get_user_id(telegram_id: str) -> str | None:
 
 async def _get_today_tasks(user_id: str) -> list[dict]:
     """Bugungi scheduled task'larni faqat shu foydalanuvchiga tegishli qilib olish."""
+    from src.infrastructure.db.models.goal import GoalModel
+    from src.infrastructure.db.models.plan import PlanModel
+
     async with async_session_factory() as session:
-        result = await session.execute(
-            select(ScheduledTaskModel)
+        stmt = (
+            select(ScheduledTaskModel, TaskTemplateModel)
             .join(
                 TaskTemplateModel,
                 TaskTemplateModel.id == ScheduledTaskModel.task_template_id,
             )
+            .join(PlanModel, PlanModel.id == TaskTemplateModel.plan_id)
+            .join(GoalModel, GoalModel.id == PlanModel.goal_id)
             .where(
+                GoalModel.user_id == UUID(user_id),
                 ScheduledTaskModel.scheduled_date == date.today(),
                 ScheduledTaskModel.status == "pending",
             )
         )
-        all_tasks = result.scalars().all()
+        result = await session.execute(stmt)
+        rows = result.all()
 
         task_list = []
-        for task in all_tasks:
-            template_result = await session.execute(
-                select(TaskTemplateModel).where(
-                    TaskTemplateModel.id == task.task_template_id
-                )
-            )
-            template = template_result.scalar_one_or_none()
-
-            if not template:
-                continue
-
-            from src.infrastructure.db.models.goal import GoalModel
-            from src.infrastructure.db.models.plan import PlanModel
-
-            plan_result = await session.execute(
-                select(PlanModel).where(PlanModel.id == template.plan_id)
-            )
-            plan = plan_result.scalar_one_or_none()
-            if not plan:
-                continue
-
-            goal_result = await session.execute(
-                select(GoalModel).where(
-                    GoalModel.id == plan.goal_id,
-                    GoalModel.user_id == UUID(user_id),
-                )
-            )
-            goal = goal_result.scalar_one_or_none()
-            if not goal:
-                continue
-
+        for task, template in rows:
             task_list.append(
                 {
                     "id": str(task.id),
@@ -98,6 +75,7 @@ async def _get_today_tasks(user_id: str) -> list[dict]:
                 }
             )
         return task_list
+
 
 
 @router.message(Command("tasks"))
