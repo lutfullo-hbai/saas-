@@ -1,7 +1,7 @@
 """Celery tasks for scheduler and notifications."""
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from dateutil.rrule import rrulestr
 
@@ -51,7 +51,7 @@ def generate_scheduled_tasks(self) -> dict:
     """Ertaga uchun barcha faol TaskTemplate'lardan ScheduledTask yaratish."""
     logger.info("Generating scheduled tasks for tomorrow...")
 
-    tomorrow = datetime.now().date() + timedelta(days=1)
+    tomorrow = datetime.now(UTC).date() + timedelta(days=1)
     tomorrow_start = datetime.combine(tomorrow, datetime.min.time())
     tomorrow_end = datetime.combine(tomorrow, datetime.max.time())
 
@@ -120,7 +120,7 @@ def send_notifications() -> dict:
     """Yaqinlashgan vazifalar uchun Telegram notification yuborish."""
     logger.info("Checking for tasks needing notifications...")
 
-    now = datetime.now()
+    now = datetime.now(UTC)
     window_start = now
     window_end = now + timedelta(minutes=15)
 
@@ -187,7 +187,7 @@ def mark_missed_checkins() -> dict:
     """Vaqti o'tgan va hali javob berilmagan vazifalarni 'missed' deb belgilash."""
     logger.info("Marking missed checkins...")
 
-    threshold = datetime.now() - timedelta(hours=3)
+    threshold = datetime.now(UTC) - timedelta(hours=3)
 
     from src.infrastructure.db.repositories import (
         create_missed_score_event,
